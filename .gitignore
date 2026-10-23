@@ -1,0 +1,14 @@
+# Raw sheet exports contain names, emails and GPS; only data/collisions.json is published
+*Responses*.csv
+# Source for scripts/alpha_codes.csv; regenerate with scripts/make_alpha_codes.py
+Alpha_codes_eng.pdf
+
+# Review exports contain BirdMapper usernames and notes
+review/
+# Raw layer dumps from scripts/explore_birdmapper.py include usernames, notes and GPS
+birdmapper_explore/
+
+__pycache__/
+
+# Internal CUSRT summary (internal counts, open items)
+OCT-23-2026-SUMMARY.md
