@@ -2,13 +2,8 @@
 *Responses*.csv
 # Source for data/alpha_codes.csv; regenerate with scripts/make_alpha_codes.py
 data/Alpha_codes_eng.pdf
-
-# Review exports contain BirdMapper usernames and notes
-review/
 # Raw layer dumps from scripts/explore_birdmapper.py include usernames, notes and GPS
 birdmapper_explore/
 
 __pycache__/
 
-# Personal hosting notes
-HOSTING.md
