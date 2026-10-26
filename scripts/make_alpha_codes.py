@@ -1,4 +1,4 @@
-"""Turn the IBP alpha-code PDF into scripts/alpha_codes.csv (code, english_name).
+"""Turn the IBP alpha-code PDF into scripts/alpha_codes.csv (code, english_name, scientific_name).
 
 Run once whenever a new Alpha_codes_eng.pdf comes out:
     python scripts/make_alpha_codes.py Alpha_codes_eng.pdf
@@ -14,7 +14,7 @@ from pathlib import Path
 
 OUT = Path(__file__).resolve().parent / "alpha_codes.csv"
 
-# "+ Snow/Ross's Goose SRGO Anser caerulescens/rossii ANSCRO" -> name, code
+# "+ Snow/Ross's Goose SRGO Anser caerulescens/rossii ANSCRO" -> name, code, scientific name
 LINE = re.compile(r"^(?:\+ )?(.+?) ([A-Z]{4})\*? (.+) ([A-Z]{6})\*?$")
 
 
@@ -26,11 +26,11 @@ def main():
     for line in text.splitlines():
         m = LINE.match(line.strip())
         if m and m[2] not in codes:
-            codes[m[2]] = m[1].replace("’", "'")
+            codes[m[2]] = (m[1].replace("’", "'"), m[3])
     with OUT.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["code", "english_name"])
-        w.writerows(sorted(codes.items()))
+        w.writerow(["code", "english_name", "scientific_name"])
+        w.writerows([code, *names] for code, names in sorted(codes.items()))
     print(f"Wrote {len(codes)} codes to {OUT}")
 
 

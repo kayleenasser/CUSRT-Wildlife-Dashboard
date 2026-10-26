@@ -4,10 +4,13 @@ By default pulls every report inside Calgary from the Global Bird Collision Mapp
 ("Bird Collision Data - public", run by FLAP Canada). With --csv it reads the CUSRT data sheet instead.
 Either way each find is normalized to the data contract in README.md and written as a flat JSON array:
 
-    [{"date": "2025-09-14", "animal": "Bird", "status": "Dead", "species": "Dark-eyed Junco", "source": "CUSRT"}, ...]
+    [{"date": "2025-09-14", "animal": "Bird", "status": "Deceased", "species": "Dark-eyed Junco", "genus": "Junco",
+      "family": "Passerellidae", "family_common": "New World Sparrows", "source": "CUSRT", "report": 1160123}, ...]
 
-`source` is "CUSRT" for the team's reports and "Public" for everything else. Only those five fields are
-written, so names, emails, notes and GPS never reach the site.
+`source` is "CUSRT" for the team's reports and "Public" for everything else. `genus` and `family` follow the
+IOC World Bird List; they're also filled in for group-only IDs ("Sparrow sp." -> Passerellidae) and are null
+when not even the family is known. Only those fields are written, so names, emails, notes and GPS never reach
+the site.
 
 Usage:
     python scripts/build_data.py                                   # BirdMapper, all Calgary reports
@@ -33,6 +36,7 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "collisions.json"
 ALPHA_CODES = Path(__file__).resolve().parent / "alpha_codes.csv"
+IOC_FAMILIES = Path(__file__).resolve().parent / "ioc_families.csv"
 
 GBCM_LAYER = ("https://services3.arcgis.com/Fl8N7M7DU9xVkwl3/arcgis/rest/services/"
               "Bird_Collision_Data_Map_view/FeatureServer/0")
@@ -41,20 +45,32 @@ GBCM_FIELDS = ("objectid,dateutc,status,species,alpha_code,count_dead,count_aliv
 CALGARY_BBOX = "-114.32,50.84,-113.86,51.22"
 CALGARY_TZ = ZoneInfo("America/Edmonton")
 CUSRT_GROUP = "Calgary Urban Species Response Team"  # GBCM groupname; everything else counts as "Public"
-# A report in the CUSRT group counts as "CUSRT" only if a team member handled the animal or found it on a
-# survey. Reports a CUSRT member only documented, with no intervention, count as "Public" (CUSRT, Oct 2026):
+# Who reported a find: "CUSRT", "Public" or "Other Wildlife Organization" (CUSRT, Oct 2026).
+# A report in the CUSRT group counts as "CUSRT" when it came from the team's survey work. That includes strikes
+# building staff, cleaners or passersby reported to a CUSRT shift, even if nobody from the team handled the bird,
+# since they wouldn't have been reported without the survey. Reports a CUSRT member only entered count as "Public":
 #  - entered from iNaturalist ("Reported to ... project on iNaturalist", "documentation from iNat")
-#  - public window strike form / online form / Messenger / member of the public / friend
-#  - documented by building security and passed on later
-#  - staff reported the strike to the shift but nobody from CUSRT handled the bird (left for magpies, ...)
+#  - submissions to CUSRT's public window strike form (entered by the team) / Messenger / member of the public / friend
+#  - documented by building security and passed on later, not on a shift
 FROM_INATURALIST = re.compile(r"\b(reported|documentation)\b[^.]{0,80}\binat(uralist)?\b", re.I)
-PUBLIC_SUBMISSION = re.compile(r"public (window strike )?(form|submission)|online strike form|via messenger|"
-                               r"by (a )?member of (the )?public|reported by friend", re.I)
+PUBLIC_SUBMISSION = re.compile(r"\b(strike|submission|public) form|form submission|public (record|window strike|submission)|"
+                               r"via messenger|by (a )?member of (the )?public|reported by friend", re.I)
 SECURITY_DOCUMENTED = re.compile(r"documented by security|reported to (cusrt|our team) (on|by security)", re.I)
-STAFF_REPORTED = re.compile(r"reported (\d+ )?strikes? to cusrt|reported to cusrt (dawn|morning) shift|"
-                            r"reported finding .{0,40} to cusrt", re.I)
-CUSRT_HANDLED = re.compile(r"handed|\breceived\b|retrieved|picked up|\bto cwrs\b|\brescued\b|we intervened|for exam|"
-                           r"(?<!not )collect", re.I)
+# Team finds entered outside the CUSRT group ("CMSRT walk", "CUSRT Dawn shift"). CMSRT is CUSRT's name before the
+# rebrand. These go through the same rules as reports in the group.
+TEAM_FIND = re.compile(r"\bc[mu]srt\b[^.;]{0,15}\b(shift|walk|find|survey)\b|collected by our team", re.I)
+# Finds documented by a wildlife organization (Calgary Wildlife / CWRS, AIWC, ...), by GBCM objectid. CUSRT checks
+# each one, and that the organization is a certified one, before it's added. None = checked, not an org find.
+# The name is written to the find's `organization` field and shown in the dashboard's report table.
+# Reports that look like one are listed in the run report until they're added here.
+WILDLIFE_ORG_REPORTS = {
+    598790: "Calgary Wildlife",  # 2019-10-04: "Photo credit: Calgary Wildlife Rehabilitation Society staff"
+    323529: "FLAP",  # 2018-05-11: filed under the FLAP Canada group (FLAP's 2023 import)
+}
+# "documented by CWRS", "Photo credit: Calgary Wildlife ... staff"; not "taken to Calgary Wildlife"
+WILDLIFE_ORG_MENTION = re.compile(r"\b((documented|reported|submitted|found) by|photo credit:?)\s+(the\s+)?(cwrs|calgary wildlife|"
+                                  r"aiwc|alberta institute for wildlife|[a-z ]{0,30}wildlife (rehab|rescue|society|centre|center))",
+                                  re.I)
 SOURCE_OVERRIDES = {
     1018375: "Public",  # 2021-09-20: window washer saw a magpie take the bird, reported to a volunteer
     1176600: "Public",  # 2026-08-19: security guard's bird, gone when the team checked
@@ -66,7 +82,7 @@ BAT_MENTION = re.compile(r"\bbats?\b", re.I)
 BAT_NOT_A_FIND = re.compile(r"birds? and bats?|looking for bats", re.I)
 # Reports with no Dead/Alive status are read from their notes, using CUSRT's rules (Oct 2026):
 #  - patrols that found nothing and impacts left on glass (imprints, marks, feathers stuck to windows) are left out
-#  - scavenged, crushed, feather piles, partial remains, or a bird "left" for the team: Dead
+#  - scavenged, crushed, feather piles, partial remains, or a bird "left" for the team: Deceased
 #  - otherwise the status is what was seen last (flew off, rescued): Alive
 #  - anything else is left out and listed in the run report
 NO_FIND_PATROL = re.compile(r"\bno finds?\b|\bzero finds?\b", re.I)
@@ -76,6 +92,7 @@ DEAD_IN_NOTES = re.compile(r"scaveng|deceased|\bdead\b|crushed|feather pile|part
 ALIVE_IN_NOTES = re.compile(r"\bflew\b|took off|\balive\b|rehab|rescued", re.I)
 # One-off decisions by CUSRT for reports the rules can't settle, by GBCM objectid (None = leave out).
 # Only used for reports without a Dead/Alive status: when BirdMapper says Dead or Alive, that's what counts.
+# Values are what the dashboard shows: "Deceased", "Alive" or None.
 OUTCOME_OVERRIDES = {
     1172536: "Alive",  # 2026-04-20: strike witnessed, no recovery flight seen, bird not found
     1163331: None,     # 2025-06-06: "Heard hit." only
@@ -88,6 +105,15 @@ BAT_SPECIES = [
     (r"little brown|myotis", "Little Brown Myotis"),
     (r"red bat", "Eastern Red Bat"),
 ]
+# The IOC list is birds only. Every bat species in Alberta is a vesper bat, so unidentified bats get the family.
+BAT_GENERA = {
+    "Silver-haired Bat": "Lasionycteris",
+    "Big Brown Bat": "Eptesicus",
+    "Hoary Bat": "Lasiurus",
+    "Eastern Red Bat": "Lasiurus",
+    "Little Brown Myotis": "Myotis",
+}
+BAT_FAMILY = ("Vespertilionidae", "Vesper Bats")
 
 # Sheet headers are long form questions; match each column on how its header starts.
 COLUMNS = {
@@ -101,9 +127,30 @@ COLUMNS = {
 # Anything with these words is an uncertain ID and counts as "Unknown".
 HEDGES = re.compile(r"\b(unknown|unknow|unkn|ukno|unk|unsure|unidentified|possible|possibly|poss|probable|probably|likely|"
                     r"maybe|suspected|mix|tbd|sp|spp|species|some kind|either|or|n/?a|none)\b|\?|^$", re.I)
-# A group name with no species ("Sparrow", "A sparrow", "Woodpecker") also counts as "Unknown".
-GROUP_ONLY = re.compile(r"(a )?(sparrow|warbler|woodpecker|gull|sapsucker|spizella|flycatcher|finch|thrush|"
-                        r"nuthatch|duck|hawk|bird)s?", re.I)
+# A group name with no species ("Sparrow", "A sparrow", "Woodpecker") also counts as "Unknown", but still
+# tells us the genus or family (IOC names) for those charts. Groups are read as they'd be meant in Calgary:
+# "sparrow" is a New World sparrow (House Sparrows are always named), "flycatcher" a tyrant flycatcher.
+TAXON_GROUPS = {
+    "sparrow": (None, "Passerellidae"),
+    "spizella": ("Spizella", "Passerellidae"),
+    "warbler": (None, "Parulidae"),
+    "woodpecker": (None, "Picidae"),
+    "sapsucker": ("Sphyrapicus", "Picidae"),
+    "gull": (None, "Laridae"),
+    "flycatcher": (None, "Tyrannidae"),
+    "empidonax": ("Empidonax", "Tyrannidae"),
+    "pewee": ("Contopus", "Tyrannidae"),
+    "finch": (None, "Fringillidae"),
+    "thrush": (None, "Turdidae"),
+    "nuthatch": ("Sitta", "Sittidae"),
+    "duck": (None, "Anatidae"),
+    "hawk": (None, "Accipitridae"),
+    "pigeon/dove": (None, "Columbidae"),
+    "pigeon": (None, "Columbidae"),
+    "dove": (None, "Columbidae"),
+    "bird": (None, None),
+}
+GROUP_ONLY = re.compile(r"(a )?({})s?".format("|".join(map(re.escape, TAXON_GROUPS))), re.I)
 # Finds that are neither birds nor bats are dropped.
 NOT_BIRD_OR_BAT = re.compile(r"non-bird|porcupine|\bhare\b", re.I)
 
@@ -143,6 +190,10 @@ SPECIES_FIXES = {
     "warbling vireo": "Western Warbling-Vireo",
     "barn owl": "American Barn Owl",
 }
+# Scientific names for species the alpha-code list doesn't have (escaped pets)
+SCIENTIFIC_FIXES = {
+    "Budgerigar": "Melopsittacus undulatus",
+}
 
 
 def read_csv(source):
@@ -181,8 +232,45 @@ def load_alpha_codes():
     return codes, names
 
 
+class Taxonomy:
+    """Genus and family for a find: genus from the alpha-code list's scientific names, family from IOC."""
+
+    def __init__(self):
+        with ALPHA_CODES.open(encoding="utf-8") as f:
+            self.scientific = {r["english_name"]: r["scientific_name"] for r in csv.DictReader(f)}
+        self.scientific.update(SCIENTIFIC_FIXES)
+        with IOC_FAMILIES.open(encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        self.families = {r["genus"]: r["family"] for r in rows}
+        self.common = {r["family"]: r["family_english"] for r in rows}
+        self.common[BAT_FAMILY[0]] = BAT_FAMILY[1]
+        self.missing = Counter()
+
+    def of(self, species, animal, raw):
+        """{"genus", "family", "family_common"}; raw is the text the species came from (for "Sparrow sp.")."""
+        if animal == "Bat":
+            genus, family = BAT_GENERA.get(species), BAT_FAMILY[0]
+        elif species != "Unknown":
+            sci = self.scientific.get(species, "")
+            genus = sci.split()[0] if sci else None
+            family = self.families.get(genus)
+            if family is None:
+                self.missing[f"{species} ({sci or 'no scientific name'})"] += 1
+        else:
+            genus, family = group_taxa(raw)
+        return {"genus": genus, "family": family, "family_common": self.common.get(family)}
+
+
+def group_taxa(raw):
+    """(genus, family) for a group-only ID ("Sparrow sp.", "Unidentified Empidonax"), else (None, None)."""
+    s = HEDGES.sub(" ", clean_species(raw)).strip(" .,;-")
+    m = GROUP_ONLY.fullmatch(re.sub(r"\s+", " ", s))
+    return TAXON_GROUPS[m[2].lower()] if m else (None, None)
+
+
 def clean_species(raw):
     s = raw.replace("’", "'").strip()
+    s = re.sub(r"[<>]", " ", s)                                        # public text is shown on the site; no markup
     s = re.sub(r"\([^)]*\)", " ", s)                                   # "(confirmed)", "(yellow-shafted)"
     s = re.split(r"\.\s|\s-\s", s)[0]                                  # "X. ID confirmed on iNaturalist", "AMRO - wings"
     s = re.sub(r"[.,\-]?\s*\b(not |un)?(confirmed|confimed|conf)\b.*$", "", s, flags=re.I)
@@ -230,16 +318,16 @@ def parse_find_date(find_id, fallback):
 
 
 def normalize_status(condition, found):
-    """Dead or Alive from the condition column, or from "What did you find" when condition is blank."""
+    """Deceased or Alive from the condition column, or from "What did you find" when condition is blank."""
     c = condition.lower()
     if "deceased" in c or "died" in c:
-        return "Dead"
+        return "Deceased"
     if "alive" in c or "escaped" in c:
         return "Alive"
     if not c.strip():
         f = found.lower()
         if "deceased" in f:
-            return "Dead"
+            return "Deceased"
         if "alive" in f:
             return "Alive"
     return None
@@ -260,6 +348,7 @@ def normalize(rows):
         return [], {}
     cols = resolve_columns(list(rows[0].keys()))
     codes, names = load_alpha_codes()
+    taxonomy = Taxonomy()
     out, report = [], {"skipped": Counter(), "date from": Counter(), "id/date mismatch": [], "unmatched species": Counter()}
     for row in rows:
         get = lambda k: (row.get(cols[k]) or "").strip()
@@ -286,14 +375,17 @@ def normalize(rows):
         species, matched = normalize_species(raw_species, codes, names)
         if not matched:
             report["unmatched species"][raw_species] += 1
+        animal = normalize_animal(get("found"), species, matched and species != "Unknown")
         out.append({
             "date": found_on,
-            "animal": normalize_animal(get("found"), species, matched and species != "Unknown"),
+            "animal": animal,
             "status": status,
             "species": species,
+            **taxonomy.of(species, animal, raw_species),
             "source": "CUSRT",
         })
     out.sort(key=lambda r: (r["date"], r["species"]))
+    report["no family"] = taxonomy.missing
     return out, report
 
 
@@ -337,32 +429,41 @@ def gbcm_bat(rec):
 
 def gbcm_bat_status(rec):
     if rec.get("status") in ("Dead", "Alive"):
-        return rec["status"]
+        return "Deceased" if rec["status"] == "Dead" else "Alive"
     notes = (rec.get("notes") or "").lower()
     if re.search(r"deceased|\bdead\b|crushed|scavenged", notes):
-        return "Dead"
+        return "Deceased"
     if re.search(r"\blive\b|alive|rescued|cwrs|injured|grounded|released|treated", notes):
         return "Alive"
     return None
 
 
 def gbcm_source(rec):
-    """CUSRT or Public, per the rules above SOURCE_OVERRIDES."""
-    if rec.get("groupname") != CUSRT_GROUP:
+    """CUSRT, Public or Other Wildlife Organization, per the rules above WILDLIFE_ORG_REPORTS."""
+    if WILDLIFE_ORG_REPORTS.get(rec.get("objectid")):
+        return "Other Wildlife Organization"
+    notes = rec.get("notes") or ""
+    if rec.get("groupname") != CUSRT_GROUP and not TEAM_FIND.search(notes):
         return "Public"
     if rec.get("objectid") in SOURCE_OVERRIDES:
         return SOURCE_OVERRIDES[rec["objectid"]]
-    notes = rec.get("notes") or ""
     if FROM_INATURALIST.search(notes) or PUBLIC_SUBMISSION.search(notes) or SECURITY_DOCUMENTED.search(notes):
-        return "Public"
-    handled = rec.get("third_party_involvement") == "Bird was handed to me" or CUSRT_HANDLED.search(notes)
-    if STAFF_REPORTED.search(notes) and not handled:
         return "Public"
     return "CUSRT"
 
 
+def possible_wildlife_org(rec):
+    """What makes this look like a wildlife organization's find, if it hasn't been checked yet (else None)."""
+    if rec.get("objectid") in WILDLIFE_ORG_REPORTS:
+        return None
+    if rec.get("groupname") not in (CUSRT_GROUP, None):
+        return f"BirdMapper group {rec['groupname']!r}"
+    m = WILDLIFE_ORG_MENTION.search(rec.get("notes") or "")
+    return f"notes name {m[4].strip()!r}" if m else None
+
+
 def gbcm_outcome_from_notes(rec):
-    """(Dead/Alive/None, reason) for a bird report whose status isn't Dead/Alive. See the rules above OUTCOME_OVERRIDES."""
+    """(Deceased/Alive/None, reason) for a bird report whose status isn't Dead/Alive. See the rules above OUTCOME_OVERRIDES."""
     notes = rec.get("notes") or ""
     if rec.get("objectid") in OUTCOME_OVERRIDES:
         outcome = OUTCOME_OVERRIDES[rec["objectid"]]
@@ -372,7 +473,7 @@ def gbcm_outcome_from_notes(rec):
     if GLASS_IMPACT.search(notes):
         return None, "impact on glass"
     if rec.get("scavenged") or DEAD_IN_NOTES.search(notes):
-        return "Dead", "dead/scavenged/remains in notes"
+        return "Deceased", "dead/scavenged/remains in notes"
     if ALIVE_IN_NOTES.search(notes):
         return "Alive", "last seen alive in notes"
     return None, "no dead/alive in notes"
@@ -380,8 +481,9 @@ def gbcm_outcome_from_notes(rec):
 
 def normalize_gbcm(records):
     codes, names = load_alpha_codes()
+    taxonomy = Taxonomy()
     out, report = [], {"skipped": Counter(), "date from": Counter(), "unmatched species": Counter(), "bats from notes": 0,
-                       "outcome from notes": Counter(), "unresolved": []}
+                       "outcome from notes": Counter(), "unresolved": [], "wildlife org to check": []}
     for rec in records:
         raw = (rec.get("species") or "").strip()
         if raw.lower() in ("", "unknown", "none", "true", "false"):
@@ -404,11 +506,11 @@ def normalize_gbcm(records):
             dead, alive, status = rec.get("count_dead") or 0, rec.get("count_alive") or 0, rec.get("status")
             # One row per animal: "Multiple" reports (and some Dead/Alive ones) carry counts
             if status == "Dead":
-                counts = {"Dead": max(dead, 1), "Alive": alive}
+                counts = {"Deceased": max(dead, 1), "Alive": alive}
             elif status == "Alive":
-                counts = {"Alive": max(alive, 1), "Dead": dead}
+                counts = {"Alive": max(alive, 1), "Deceased": dead}
             elif status == "Multiple" and dead + alive:
-                counts = {"Dead": dead, "Alive": alive}
+                counts = {"Deceased": dead, "Alive": alive}
             else:
                 outcome, reason = gbcm_outcome_from_notes(rec)
                 if outcome is None:
@@ -417,7 +519,7 @@ def normalize_gbcm(records):
                         report["unresolved"].append(rec)
                     continue
                 counts = {outcome: max(rec.get("count_unknown") or 0, 1)}
-                species, matched = "Unknown", True
+                species, matched, raw = "Unknown", True, ""
                 report["outcome from notes"][f"{outcome} ({reason})"] += 1
             if not matched:
                 report["unmatched species"][raw] += 1
@@ -427,12 +529,17 @@ def normalize_gbcm(records):
             continue
         found_on = datetime.fromtimestamp(rec["dateutc"] / 1000, CALGARY_TZ).date().isoformat()
         source = gbcm_source(rec)
+        if why := possible_wildlife_org(rec):
+            report["wildlife org to check"].append((rec["objectid"], found_on, why))
+        taxa = taxonomy.of(species, animal, raw)
+        org = {"organization": WILDLIFE_ORG_REPORTS[rec["objectid"]]} if source == "Other Wildlife Organization" else {}
         report["date from"]["dateutc (Calgary time)"] += 1
         for st, n in counts.items():
-            out += [{"date": found_on, "animal": animal, "status": st, "species": species, "source": source,
-                     "report": rec["objectid"]}] * n
+            out += [{"date": found_on, "animal": animal, "status": st, "species": species, **taxa, "source": source,
+                     **org, "report": rec["objectid"]}] * n
     out.sort(key=lambda r: (r["date"], r["species"]))
     report["reports"] = len(records)
+    report["no family"] = taxonomy.missing
     return out, report
 
 
@@ -444,8 +551,14 @@ def print_report(finds, report):
         print("Outcome read from notes or set by a CUSRT decision:", dict(report["outcome from notes"]))
     print("Skipped:", dict(report["skipped"]))
     for rec in report.get("unresolved", []):
-        print(f"  left out, needs a decision (add to OUTCOME_OVERRIDES): objectid {rec['objectid']}: "
-              f"{(rec.get('notes') or '(no notes)')[:100]!r}")
+        # No notes: they can name volunteers, and the hourly job's log is public if the repo is. Look the report up
+        # in BirdMapper by its objectid.
+        found_on = datetime.fromtimestamp(rec["dateutc"] / 1000, CALGARY_TZ).date() if rec.get("dateutc") else "no date"
+        print(f"  left out, needs a decision (add to OUTCOME_OVERRIDES): objectid {rec['objectid']} ({found_on}, "
+              f"BirdMapper status {rec.get('status')!r})")
+    for objectid, found_on, why in report.get("wildlife org to check", []):
+        print(f"  possible wildlife organization find, needs a CUSRT check (add to WILDLIFE_ORG_REPORTS): "
+              f"objectid {objectid} ({found_on}): {why}")
     print("Date taken from:", dict(report["date from"]))
     if report.get("id/date mismatch"):
         print(f"{len(report['id/date mismatch'])} find IDs disagree with the Date column (ID was used):")
@@ -455,6 +568,10 @@ def print_report(finds, report):
         print("Species not in the alpha-code list (kept as written; add to SPECIES_FIXES if needed):")
         for s, n in report["unmatched species"].most_common():
             print(f"  {n:3}  {s!r}")
+    if report["no family"]:
+        print("Species with no IOC family (add to SCIENTIFIC_FIXES, or rerun make_ioc_families.py):")
+        for s, n in report["no family"].most_common():
+            print(f"  {n:3}  {s}")
 
 
 def main():
