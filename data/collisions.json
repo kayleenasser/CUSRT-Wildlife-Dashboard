@@ -1362,7 +1362,7 @@
 "genus": "Poecile",
 "family": "Paridae",
 "family_common": "Tits, Chickadees",
-"source": "Public",
+"source": "CUSRT",
 "report": 1018375
 },
 {
@@ -3067,7 +3067,7 @@
 "genus": "Sitta",
 "family": "Sittidae",
 "family_common": "Nuthatches",
-"source": "Public",
+"source": "CUSRT",
 "report": 1139005
 },
 {
@@ -3221,7 +3221,7 @@
 "genus": "Corthylio",
 "family": "Regulidae",
 "family_common": "Goldcrests, Kinglets",
-"source": "Public",
+"source": "CUSRT",
 "report": 1142997
 },
 {
@@ -9546,7 +9546,7 @@
 "genus": null,
 "family": "Vespertilionidae",
 "family_common": "Vesper Bats",
-"source": "Public",
+"source": "CUSRT",
 "report": 1168037
 },
 {
@@ -10514,7 +10514,7 @@
 "genus": "Accipiter",
 "family": "Accipitridae",
 "family_common": "Kites, Hawks, Eagles",
-"source": "Public",
+"source": "CUSRT",
 "report": 1170133
 },
 {
@@ -10525,7 +10525,7 @@
 "genus": "Accipiter",
 "family": "Accipitridae",
 "family_common": "Kites, Hawks, Eagles",
-"source": "Public",
+"source": "CUSRT",
 "report": 1170176
 },
 {
@@ -11196,7 +11196,7 @@
 "genus": "Junco",
 "family": "Passerellidae",
 "family_common": "New World Sparrows",
-"source": "Public",
+"source": "CUSRT",
 "report": 1170132
 },
 {
@@ -11207,7 +11207,7 @@
 "genus": "Junco",
 "family": "Passerellidae",
 "family_common": "New World Sparrows",
-"source": "Public",
+"source": "CUSRT",
 "report": 1170175
 },
 {
@@ -11361,7 +11361,7 @@
 "genus": "Junco",
 "family": "Passerellidae",
 "family_common": "New World Sparrows",
-"source": "Public",
+"source": "CUSRT",
 "report": 1170131
 },
 {
@@ -11372,7 +11372,7 @@
 "genus": "Junco",
 "family": "Passerellidae",
 "family_common": "New World Sparrows",
-"source": "Public",
+"source": "CUSRT",
 "report": 1170174
 },
 {
@@ -14408,7 +14408,7 @@
 "genus": null,
 "family": null,
 "family_common": null,
-"source": "Public",
+"source": "CUSRT",
 "report": 1176600
 },
 {

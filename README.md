@@ -30,9 +30,9 @@ Data comes from the Global Bird Collision Mapper's public layer, "Bird Collision
 Canada), queried for the Calgary area (`--bbox`, default `-114.32,50.84,-113.86,51.22`). No account or
 key is needed. Only `date`, `animal`, `status`, `species`, `genus`, `family`, `family_common`, `source` ("CUSRT" when the report is
 in the Calgary Urban Species Response Team group and came from the team's surveys, including strikes building
-staff, cleaners or passersby reported to a shift, and team finds entered outside the group ("CMSRT walk",
+staff, cleaners, security or passersby reported to a shift or volunteer, and team finds entered outside the group ("CMSRT walk",
 "CUSRT Dawn shift"; CMSRT is CUSRT's name before the rebrand); "Public" otherwise, including CUSRT-entered reports from
-iNaturalist, CUSRT's public window strike form and security reports passed on after the fact; "Other Wildlife
+iNaturalist and CUSRT's public window strike form; "Other Wildlife
 Organization" for finds documented by another wildlife organization, listed by hand in `WILDLIFE_ORG_REPORTS`
 after CUSRT checks them, with the organization's name in `organization`. See `gbcm_source` in `build_data.py`) and `report` (the BirdMapper objectid,
 shown in the species chart's click-through table) are written out; usernames, notes and

@@ -47,15 +47,14 @@ CALGARY_TZ = ZoneInfo("America/Edmonton")
 CUSRT_GROUP = "Calgary Urban Species Response Team"  # GBCM groupname; everything else counts as "Public"
 # Who reported a find: "CUSRT", "Public" or "Other Wildlife Organization" (CUSRT, Oct 2026).
 # A report in the CUSRT group counts as "CUSRT" when it came from the team's survey work. That includes strikes
-# building staff, cleaners or passersby reported to a CUSRT shift, even if nobody from the team handled the bird,
-# since they wouldn't have been reported without the survey. Reports a CUSRT member only entered count as "Public":
+# building staff, cleaners, security or passersby reported to a CUSRT shift or volunteer (also when security passed
+# them on days later), even if nobody from the team handled the bird, since they wouldn't have been reported without
+# the survey. Reports a CUSRT member only entered count as "Public":
 #  - entered from iNaturalist ("Reported to ... project on iNaturalist", "documentation from iNat")
 #  - submissions to CUSRT's public window strike form (entered by the team) / Messenger / member of the public / friend
-#  - documented by building security and passed on later, not on a shift
 FROM_INATURALIST = re.compile(r"\b(reported|documentation)\b[^.]{0,80}\binat(uralist)?\b", re.I)
 PUBLIC_SUBMISSION = re.compile(r"\b(strike|submission|public) form|form submission|public (record|window strike|submission)|"
                                r"via messenger|by (a )?member of (the )?public|reported by friend", re.I)
-SECURITY_DOCUMENTED = re.compile(r"documented by security|reported to (cusrt|our team) (on|by security)", re.I)
 # Team finds entered outside the CUSRT group ("CMSRT walk", "CUSRT Dawn shift"). CMSRT is CUSRT's name before the
 # rebrand. These go through the same rules as reports in the group.
 TEAM_FIND = re.compile(r"\bc[mu]srt\b[^.;]{0,15}\b(shift|walk|find|survey)\b|collected by our team", re.I)
@@ -71,10 +70,14 @@ WILDLIFE_ORG_REPORTS = {
 WILDLIFE_ORG_MENTION = re.compile(r"\b((documented|reported|submitted|found) by|photo credit:?)\s+(the\s+)?(cwrs|calgary wildlife|"
                                   r"aiwc|alberta institute for wildlife|[a-z ]{0,30}wildlife (rehab|rescue|society|centre|center))",
                                   re.I)
+# One-off decisions by CUSRT (Oct 26, 2026), by GBCM objectid
 SOURCE_OVERRIDES = {
-    1018375: "Public",  # 2021-09-20: window washer saw a magpie take the bird, reported to a volunteer
-    1176600: "Public",  # 2026-08-19: security guard's bird, gone when the team checked
-    1168037: "Public",  # 2025-09-04: staff reported a grounded bat and called CWRS; bat couldn't be found
+    1018375: "CUSRT",  # 2021-09-20: window washer saw a magpie take the bird, reported to a volunteer
+    1176600: "CUSRT",  # 2026-08-19: security guard's bird, gone when the team checked
+    1168037: "CUSRT",  # 2025-09-04: staff reported a grounded bat to the shift and called CWRS; bat couldn't be found
+    # Entered outside the CUSRT group by a team member
+    1142997: "CUSRT",  # 2023-09-19: passerby reported a bird around 5 am; the team went, bird was gone
+    1139005: "CUSRT",  # 2023-04-29: a team member's own find
 }
 
 BAT_MENTION = re.compile(r"\bbats?\b", re.I)
@@ -442,12 +445,12 @@ def gbcm_source(rec):
     """CUSRT, Public or Other Wildlife Organization, per the rules above WILDLIFE_ORG_REPORTS."""
     if WILDLIFE_ORG_REPORTS.get(rec.get("objectid")):
         return "Other Wildlife Organization"
+    if rec.get("objectid") in SOURCE_OVERRIDES:
+        return SOURCE_OVERRIDES[rec["objectid"]]
     notes = rec.get("notes") or ""
     if rec.get("groupname") != CUSRT_GROUP and not TEAM_FIND.search(notes):
         return "Public"
-    if rec.get("objectid") in SOURCE_OVERRIDES:
-        return SOURCE_OVERRIDES[rec["objectid"]]
-    if FROM_INATURALIST.search(notes) or PUBLIC_SUBMISSION.search(notes) or SECURITY_DOCUMENTED.search(notes):
+    if FROM_INATURALIST.search(notes) or PUBLIC_SUBMISSION.search(notes):
         return "Public"
     return "CUSRT"
 

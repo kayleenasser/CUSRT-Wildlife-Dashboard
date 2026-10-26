@@ -2,7 +2,8 @@ name: Refresh collision data
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    # Hourly at :17. GitHub delays or drops scheduled runs when it's busy, and the top of the hour is busiest.
+    - cron: "17 * * * *"
   workflow_dispatch:
 
 permissions:
