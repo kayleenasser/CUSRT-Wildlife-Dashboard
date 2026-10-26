@@ -35,8 +35,8 @@ from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "collisions.json"
-ALPHA_CODES = Path(__file__).resolve().parent / "alpha_codes.csv"
-IOC_FAMILIES = Path(__file__).resolve().parent / "ioc_families.csv"
+ALPHA_CODES = ROOT / "data" / "alpha_codes.csv"
+IOC_FAMILIES = ROOT / "data" / "ioc_families.csv"
 
 GBCM_LAYER = ("https://services3.arcgis.com/Fl8N7M7DU9xVkwl3/arcgis/rest/services/"
               "Bird_Collision_Data_Map_view/FeatureServer/0")

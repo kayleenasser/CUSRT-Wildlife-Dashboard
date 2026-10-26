@@ -1,4 +1,4 @@
-"""Turn the IOC World Bird List master list into scripts/ioc_families.csv (genus, family, family_english).
+"""Turn the IOC World Bird List master list into data/ioc_families.csv (genus, family, family_english).
 
 Run once whenever a new IOC version comes out (download master_ioc_list_vX.Y.xlsx from
 https://www.worldbirdnames.org/new/ioc-lists/master-list-2/):
@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parent / "ioc_families.csv"
+OUT = Path(__file__).resolve().parent.parent / "data" / "ioc_families.csv"
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 
 

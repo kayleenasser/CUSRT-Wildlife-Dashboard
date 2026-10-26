@@ -7,8 +7,8 @@ collisions: they're found grounded and the cause isn't always a collision.)
 data/collisions.json            data the dashboard loads (built from BirdMapper)
 site/index.html                 the dashboard (plain HTML + d3 v7, no build step)
 scripts/build_data.py           BirdMapper (default) or the CUSRT sheet CSV -> data/collisions.json
-scripts/alpha_codes.csv         4-letter bird codes -> common and scientific names (from the IBP PDF)
-scripts/ioc_families.csv        genus -> family, from the IOC World Bird List (scripts/make_ioc_families.py)
+data/alpha_codes.csv            4-letter bird codes -> common and scientific names (from the IBP PDF)
+data/ioc_families.csv           genus -> family, from the IOC World Bird List (scripts/make_ioc_families.py)
 scripts/explore_birdmapper.py   probes a BirdMapper / GBCM FeatureServer
 .github/workflows/refresh.yml   hourly: runs build_data.py and commits the result
 ```
@@ -48,10 +48,10 @@ How each field is read:
   the status is what was seen last (flew off, rescued → Alive). Reports the rules can't settle are left out
   and listed in the run report; CUSRT's one-off decisions go in `OUTCOME_OVERRIDES` in `build_data.py`.
 - **species**: the species field, or the 4-letter `alpha_code` when that's empty, mapped to the current
-  AOS common name via `scripts/alpha_codes.csv`. Hedged or group-only IDs ("Sparrow sp.") become
+  AOS common name via `data/alpha_codes.csv`. Hedged or group-only IDs ("Sparrow sp.") become
   "Unknown". Older names and typos are fixed in `SPECIES_FIXES` in `build_data.py`.
 - **genus / family**: the genus is the first word of the species' scientific name (`alpha_codes.csv`); the
-  family is that genus's family in the IOC World Bird List (v15.2, `scripts/ioc_families.csv`), with its
+  family is that genus's family in the IOC World Bird List (v15.2, `data/ioc_families.csv`), with its
   English name in `family_common`. Group-only IDs still get what they tell us, via `TAXON_GROUPS` in
   `build_data.py` ("Sparrow sp." -> Passerellidae, "Unidentified Empidonax" -> *Empidonax*, Tyrannidae).
   Bats use `BAT_GENERA` (all are Vespertilionidae). Null when not even the family is known. To update to a

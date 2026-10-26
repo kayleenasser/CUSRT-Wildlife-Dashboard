@@ -1,7 +1,7 @@
-"""Turn the IBP alpha-code PDF into scripts/alpha_codes.csv (code, english_name, scientific_name).
+"""Turn the IBP alpha-code PDF into data/alpha_codes.csv (code, english_name, scientific_name).
 
-Run once whenever a new Alpha_codes_eng.pdf comes out:
-    python scripts/make_alpha_codes.py Alpha_codes_eng.pdf
+Run once whenever a new Alpha_codes_eng.pdf comes out (keep it in data/; it is not uploaded to GitHub):
+    python scripts/make_alpha_codes.py data/Alpha_codes_eng.pdf
 
 Needs the `pdftotext` command (poppler; ships with Git for Windows).
 """
@@ -12,14 +12,15 @@ import subprocess
 import sys
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parent / "alpha_codes.csv"
+DATA = Path(__file__).resolve().parent.parent / "data"
+OUT = DATA / "alpha_codes.csv"
 
 # "+ Snow/Ross's Goose SRGO Anser caerulescens/rossii ANSCRO" -> name, code, scientific name
 LINE = re.compile(r"^(?:\+ )?(.+?) ([A-Z]{4})\*? (.+) ([A-Z]{6})\*?$")
 
 
 def main():
-    pdf = sys.argv[1] if len(sys.argv) > 1 else "Alpha_codes_eng.pdf"
+    pdf = sys.argv[1] if len(sys.argv) > 1 else str(DATA / "Alpha_codes_eng.pdf")
     text = subprocess.run(["pdftotext", "-raw", "-enc", "UTF-8", pdf, "-"],
                           capture_output=True, check=True).stdout.decode("utf-8")
     codes = {}
