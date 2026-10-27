@@ -7725,6 +7725,17 @@
 },
 {
 "date": "2025-08-05",
+"animal": "Bat",
+"status": "Deceased",
+"species": "Big Brown Bat",
+"genus": "Eptesicus",
+"family": "Vespertilionidae",
+"family_common": "Vesper Bats",
+"source": "CUSRT",
+"report": 1162628
+},
+{
+"date": "2025-08-05",
 "animal": "Bird",
 "status": "Deceased",
 "species": "Chipping Sparrow",
@@ -7799,17 +7810,6 @@
 "family_common": null,
 "source": "CUSRT",
 "report": 1162627
-},
-{
-"date": "2025-08-05",
-"animal": "Bat",
-"status": "Deceased",
-"species": "Unknown",
-"genus": null,
-"family": "Vespertilionidae",
-"family_common": "Vesper Bats",
-"source": "CUSRT",
-"report": 1162628
 },
 {
 "date": "2025-08-06",
@@ -14115,6 +14115,17 @@
 "report": 1176439
 },
 {
+"date": "2026-08-03",
+"animal": "Bat",
+"status": "Deceased",
+"species": "Big Brown Bat",
+"genus": "Eptesicus",
+"family": "Vespertilionidae",
+"family_common": "Vesper Bats",
+"source": "CUSRT",
+"report": 1184229
+},
+{
 "date": "2026-08-04",
 "animal": "Bird",
 "status": "Deceased",
@@ -14643,6 +14654,17 @@
 "report": 1176869
 },
 {
+"date": "2026-08-30",
+"animal": "Bat",
+"status": "Deceased",
+"species": "Silver-haired Bat",
+"genus": "Lasionycteris",
+"family": "Vespertilionidae",
+"family_common": "Vesper Bats",
+"source": "CUSRT",
+"report": 1184230
+},
+{
 "date": "2026-09-01",
 "animal": "Bird",
 "status": "Deceased",
@@ -14674,6 +14696,17 @@
 "family_common": "New World Warblers",
 "source": "CUSRT",
 "report": 1177825
+},
+{
+"date": "2026-09-04",
+"animal": "Bat",
+"status": "Alive",
+"species": "Silver-haired Bat",
+"genus": "Lasionycteris",
+"family": "Vespertilionidae",
+"family_common": "Vesper Bats",
+"source": "CUSRT",
+"report": 1184231
 },
 {
 "date": "2026-09-09",
