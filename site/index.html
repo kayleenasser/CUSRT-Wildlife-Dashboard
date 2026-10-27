@@ -132,7 +132,7 @@
     .intro {
       margin-top: 12px;
       color: #d5e2e6;
-      font-size: .95rem;
+      font-size: .88rem;
     }
 
     .intro p {
@@ -143,16 +143,14 @@
       margin-bottom: 0;
     }
 
-    /* Darker panel inside the header, so the summary and year filter read apart from the description */
+    /* Summary line, then the year filter under it, both lined up with the description */
     .summary {
       display: flex;
-      flex-wrap: wrap;
-      gap: 12px 24px;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
       margin-top: 22px;
-      padding: 14px 20px;
-      background: #044d66;
+      padding: 14px 0;  /* no side padding, so the summary lines up with the description above */
       color: #fff;
     }
 
@@ -735,6 +733,48 @@
       color: #fff;
     }
 
+    /* Species name with its "Learn about this bird / bat" link beside it */
+    #reports .title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 4px 14px;
+    }
+
+    #reports .learn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--lime);
+      font-size: .82rem;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    #reports .learn[hidden] {
+      display: none;  /* only species pop-ups have a page to link to */
+    }
+
+    #reports .learn svg {
+      align-self: center;
+    }
+
+    /* Species names in pop-ups that list several species link to the same pages */
+    #reports td a.species-link {
+      color: var(--teal);
+      text-underline-offset: 2px;
+    }
+
+    #reports .learn:hover {
+      text-decoration: underline;
+    }
+
+    #reports .learn:focus-visible {
+      outline: 2px solid var(--lime);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
     #reports .sub {
       color: #d5e2e6;
     }
@@ -1014,7 +1054,13 @@
   <dialog id="reports" aria-labelledby="reports-title">
     <header>
       <div>
-        <h2 id="reports-title"></h2>
+        <div class="title-row">
+          <h2 id="reports-title"></h2>
+          <a class="learn" id="reports-learn" target="_blank" rel="noopener" hidden><svg viewBox="0 0 16 16"
+              width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor"
+                stroke-width="1.5" /><path d="M8 7v4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+              <circle cx="8" cy="4.6" r="1" fill="currentColor" /></svg><span></span></a>
+        </div>
         <p class="sub" id="reports-sub"></p>
       </div>
       <button class="close" id="reports-close" aria-label="Close">&times;</button>
@@ -1037,8 +1083,8 @@
     const CATEGORIES = [
       { key: "Birds - Deceased", animal: "Bird", status: "Deceased", color: "var(--deceased-bird)" },
       { key: "Birds - Live", animal: "Bird", status: "Alive", color: "var(--live-bird)" },
-      { key: "Bats- Deceased", animal: "Bat", status: "Deceased", color: "var(--deceased-bat)" },
-      { key: "Bats- Live", animal: "Bat", status: "Alive", color: "var(--live-bat)" },
+      { key: "Bats - Deceased", animal: "Bat", status: "Deceased", color: "var(--deceased-bat)" },
+      { key: "Bats - Live", animal: "Bat", status: "Alive", color: "var(--live-bat)" },
     ];
     // Species chart bars are split at this day of the year: before it, and from it (inclusive) to Dec 31.
     // Change the labels in the chart's key in the HTML too.
@@ -1403,7 +1449,24 @@
 
     // A report with several animals becomes several finds; it's shown once with its counts.
     // sourceInTitle: opened from "Who reported", so the Reported by column only shows if it differs between reports.
-    function openReports(rows, title, { italic = false, sourceInTitle = false } = {}) {
+    // "Learn about this bird / bat" link for a species pop-up. Birds go to Cornell's All About Birds guide
+    // (allaboutbirds.org/guide/Chipping_Sparrow/: spaces to underscores, no apostrophes); GUIDE_LINKS covers the pages
+    // that don't follow that pattern (checked by CUSRT, Oct 2026). All Alberta bats are on one Alberta Bats page.
+    const GUIDE_LINKS = {
+      "Western Warbling-Vireo": "https://www.allaboutbirds.org/guide/Western_Warbling_Vireo/",
+      "Common Wood Pigeon": "https://www.allaboutbirds.org/guide/Common_Wood-Pigeon/",
+      // BirdMapper's only Hybrid Sapsucker (2026-05-01) was "suggested ID of YBSAxRNSA"
+      "Hybrid Sapsucker": "https://ebird.org/species/x00634",  // Yellow-bellied x Red-naped Sapsucker (hybrid), eBird
+    };
+    function learnLink(species, animal) {
+      if (isUnknown(species)) return null;  // nothing to link to for unidentified birds or bats
+      if (animal === "Bat") return { url: "https://www.albertabats.ca/batprofiles/", text: "Learn about this bat" };
+      const url = GUIDE_LINKS[species]
+        ?? `https://www.allaboutbirds.org/guide/${encodeURIComponent(species.replace(/['’]/g, "").replace(/\s+/g, "_"))}/`;
+      return { url, text: "Learn about this bird" };
+    }
+
+    function openReports(rows, title, { italic = false, sourceInTitle = false, learnMore = null } = {}) {
       const reports = d3.groups(rows, r => r.report ?? `${r.date}|${r.source}`).map(([, rs]) => {
         const deceased = rs.filter(r => r.status === "Deceased").length, alive = rs.length - deceased;
         const outcome = [deceased && (deceased > 1 ? `${deceased} deceased` : "Deceased"),
@@ -1419,7 +1482,16 @@
       // alphabetically); clicking the sorted column again reverses it. The choice is remembered between pop-ups.
       const cols = [
         { id: "date", label: "Date", get: r => longDate(r.date), sortBy: r => r.date },
-        ...(mixed ? [{ id: "species", label: "Species", get: r => isUnknown(r.species) ? "Not identified" : r.species }] : []),
+        ...(mixed ? [{
+          id: "species", label: "Species", html: true,
+          get: r => {
+            const link = learnLink(r.species, r.animal);
+            if (!link) return "Not identified";
+            return `<a class="species-link" href="${esc(link.url)}" target="_blank" rel="noopener"
+              title="${esc(link.text)}">${esc(r.species)}</a>`;
+          },
+          sortBy: r => isUnknown(r.species) ? "not identified" : r.species.toLowerCase(),
+        }] : []),
         // "11 deceased, 4 alive" sorts with "Deceased", not ahead of "Alive"
         { id: "outcome", label: "Outcome", get: r => r.outcome, sortBy: r => r.outcome.replace(/^\d+ /, "").toLowerCase() },
         ...(showSource ? [{ id: "source", label: "Reported by", get: reportedBy }] : []),
@@ -1447,6 +1519,12 @@
       const h = document.getElementById("reports-title");
       h.textContent = title;
       h.style.fontStyle = italic ? "italic" : "";
+      const learn = document.getElementById("reports-learn");
+      learn.hidden = !learnMore;
+      if (learnMore) {
+        learn.href = learnMore.url;
+        learn.querySelector("span").textContent = learnMore.text;
+      }
       document.getElementById("reports-sub").textContent =
         `${fmt(rows.length)} ${rows.length === 1 ? "record" : "records"} in ${fmt(reports.length)} ` +
         `${reports.length === 1 ? "report" : "reports"} · ${year === "all" ? "all years" : year}`;
@@ -1457,7 +1535,8 @@
     // From the species chart: one species, genus or family
     function openGroup(d) {
       const L = LEVELS[level];
-      openReports(currentRows.filter(r => L.key(r) === d.key && r.animal === d.animal), L.label(d), { italic: L.italic });
+      openReports(currentRows.filter(r => L.key(r) === d.key && r.animal === d.animal), L.label(d),
+        { italic: L.italic, learnMore: level === "species" ? learnLink(d.key, d.animal) : null });
     }
 
     let currentRows = [];
