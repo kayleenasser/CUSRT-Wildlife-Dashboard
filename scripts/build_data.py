@@ -1,13 +1,12 @@
 """Build data/collisions.json for the dashboard.
 
 By default pulls every report inside Calgary from the Global Bird Collision Mapper's public layer
-("Bird Collision Data - public", run by FLAP Canada). With --csv it reads the CUSRT data sheet instead.
-Either way each find is normalized to the data contract in README.md and written as a flat JSON array:
+("Bird Collision Data - public", run by FLAP Canada). Each find is normalized to the data contract in README.md and written as a flat JSON array:
 
     [{"date": "2025-09-14", "animal": "Bird", "status": "Deceased", "species": "Dark-eyed Junco", "genus": "Junco",
       "family": "Passerellidae", "family_common": "New World Sparrows", "source": "CUSRT", "report": 1160123}, ...]
 
-`source` is "CUSRT" for the team's reports and "Public" for everything else. `genus` and `family` follow the
+`source` is "CUSRT", "Public" or "Other Wildlife Organization" (see the rules above WILDLIFE_ORG_REPORTS). `genus` and `family` follow the
 IOC World Bird List; they're also filled in for group-only IDs ("Sparrow sp." -> Passerellidae) and are null
 when not even the family is known. Only those fields are written, so names, emails, notes and GPS never reach
 the site.
@@ -15,21 +14,19 @@ the site.
 Usage:
     python scripts/build_data.py                                   # BirdMapper, all Calgary reports
     python scripts/build_data.py --group "Calgary Urban Species Response Team"
-    python scripts/build_data.py --csv "CUSRT Data Sheet (Responses) - Form Responses 1.csv"
 
 Standard library only.
 """
 
 import argparse
 import csv
-import io
 import json
 import re
 import sys
 import urllib.parse
 import urllib.request
 from collections import Counter
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -37,6 +34,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "collisions.json"
 ALPHA_CODES = ROOT / "data" / "alpha_codes.csv"
 IOC_FAMILIES = ROOT / "data" / "ioc_families.csv"
+NABAT_CODES = ROOT / "data" / "NABat_Species_Codes.csv"
 
 GBCM_LAYER = ("https://services3.arcgis.com/Fl8N7M7DU9xVkwl3/arcgis/rest/services/"
               "Bird_Collision_Data_Map_view/FeatureServer/0")
@@ -101,30 +99,24 @@ OUTCOME_OVERRIDES = {
     1163331: None,     # 2025-06-06: "Heard hit." only
     1148654: None,     # 2024-04-15: status Unknown, no notes
 }
-BAT_SPECIES = [
-    (r"silver[- ]?hair", "Silver-haired Bat"),
-    (r"big brown", "Big Brown Bat"),
-    (r"hoary", "Hoary Bat"),
-    (r"little brown|myotis", "Little Brown Myotis"),
-    (r"red bat", "Eastern Red Bat"),
-]
-# The IOC list is birds only. Every bat species in Alberta is a vesper bat, so unidentified bats get the family.
-BAT_GENERA = {
-    "Silver-haired Bat": "Lasionycteris",
-    "Big Brown Bat": "Eptesicus",
-    "Hoary Bat": "Lasiurus",
-    "Eastern Red Bat": "Lasiurus",
-    "Little Brown Myotis": "Myotis",
+# Bat species come from NABat's species codes (data/NABat_Species_Codes.csv): common name, scientific name or
+# 4-letter code in the report. These shorter forms also turn up in notes (NABat code of the species they mean).
+BAT_ALIASES = {
+    r"silver[- ]?hair": "LANO",
+    r"hoary": "LACI",
+    r"red bat": "LABO",
 }
+# A bare "myotis" names only the genus
+BAT_GENUS_ONLY = re.compile(r"\bmyotis\b", re.I)
+# The IOC list is birds only, so bat families are set here by genus. Every bat in Alberta is a vesper bat, so
+# that's also the family of bats not identified to genus.
 BAT_FAMILY = ("Vespertilionidae", "Vesper Bats")
-
-# Sheet headers are long form questions; match each column on how its header starts.
-COLUMNS = {
-    "find_id": "id of find",
-    "date": "date",
-    "found": "what did you find",
-    "species": "species",
-    "condition": "what condition was the animal in",
+BAT_FAMILIES = {
+    **dict.fromkeys(["Eumops", "Molossus", "Nyctinomops", "Tadarida"], ("Molossidae", "Free-tailed Bats")),
+    **dict.fromkeys(["Artibeus", "Brachyphylla", "Choeronycteris", "Diphylla", "Leptonycteris", "Macrotus",
+                     "Stenoderma"], ("Phyllostomidae", "Leaf-nosed Bats")),
+    "Mormoops": ("Mormoopidae", "Ghost-faced Bats"),
+    "Noctilio": ("Noctilionidae", "Bulldog Bats"),
 }
 
 # Anything with these words is an uncertain ID and counts as "Unknown".
@@ -154,8 +146,6 @@ TAXON_GROUPS = {
     "bird": (None, None),
 }
 GROUP_ONLY = re.compile(r"(a )?({})s?".format("|".join(map(re.escape, TAXON_GROUPS))), re.I)
-# Finds that are neither birds nor bats are dropped.
-NOT_BIRD_OR_BAT = re.compile(r"non-bird|porcupine|\bhare\b", re.I)
 
 # Spellings and names the alpha-code list won't match on its own (keys are lower-case).
 SPECIES_FIXES = {
@@ -174,12 +164,6 @@ SPECIES_FIXES = {
     "feral pigeon": "Rock Pigeon",
     "feral pigeon/rock dove": "Rock Pigeon",
     "rock pigeon, domestic/racing": "Rock Pigeon",
-    "silver-haired": "Silver-haired Bat",
-    "silver-haired bat": "Silver-haired Bat",
-    "silver hair bat": "Silver-haired Bat",
-    "big brown bat": "Big Brown Bat",
-    "hoary bat": "Hoary Bat",
-    "little brown bat": "Little Brown Myotis",
     "chipping": "Chipping Sparrow",
     "clay coloured": "Clay-colored Sparrow",
     "swainsons thrush": "Swainson's Thrush",
@@ -199,25 +183,6 @@ SCIENTIFIC_FIXES = {
 }
 
 
-def read_csv(source):
-    if re.match(r"https?://", source):
-        with urllib.request.urlopen(source, timeout=60) as resp:
-            text = resp.read().decode("utf-8-sig")
-    else:
-        text = Path(source).read_text(encoding="utf-8-sig")
-    return list(csv.DictReader(io.StringIO(text)))
-
-
-def resolve_columns(headers):
-    resolved = {}
-    for field, prefix in COLUMNS.items():
-        match = next((h for h in headers if h.strip().lower().startswith(prefix)), None)
-        if match is None:
-            sys.exit(f"No column starting with {prefix!r}. Sheet headers: {headers}")
-        resolved[field] = match
-    return resolved
-
-
 # ---- species ----
 
 def name_key(s):
@@ -227,9 +192,14 @@ def name_key(s):
     return re.sub(r"[^a-z/]+", " ", s).strip()
 
 
+def read_reference(path):
+    """Rows of a data/ reference CSV as dicts, skipping the "#" credit lines at the top."""
+    with path.open(encoding="utf-8-sig") as f:
+        return list(csv.DictReader(line for line in f if not line.startswith("#") and line.strip()))
+
+
 def load_alpha_codes():
-    with ALPHA_CODES.open(encoding="utf-8") as f:
-        codes = {r["code"]: r["english_name"] for r in csv.DictReader(f)}
+    codes = {r["code"]: r["english_name"] for r in read_reference(ALPHA_CODES)}
     names = {name_key(n): n for n in codes.values()}
     names.update({name_key(k): v for k, v in SPECIES_FIXES.items()})
     return codes, names
@@ -239,20 +209,18 @@ class Taxonomy:
     """Genus and family for a find: genus from the alpha-code list's scientific names, family from IOC."""
 
     def __init__(self):
-        with ALPHA_CODES.open(encoding="utf-8") as f:
-            self.scientific = {r["english_name"]: r["scientific_name"] for r in csv.DictReader(f)}
+        self.scientific = {r["english_name"]: r["scientific_name"] for r in read_reference(ALPHA_CODES)}
         self.scientific.update(SCIENTIFIC_FIXES)
-        with IOC_FAMILIES.open(encoding="utf-8") as f:
-            rows = list(csv.DictReader(f))
+        rows = read_reference(IOC_FAMILIES)
         self.families = {r["genus"]: r["family"] for r in rows}
         self.common = {r["family"]: r["family_english"] for r in rows}
-        self.common[BAT_FAMILY[0]] = BAT_FAMILY[1]
+        self.common.update(dict([BAT_FAMILY, *BAT_FAMILIES.values()]))
         self.missing = Counter()
 
-    def of(self, species, animal, raw):
+    def of(self, species, animal, raw, bat_genus=None):
         """{"genus", "family", "family_common"}; raw is the text the species came from (for "Sparrow sp.")."""
         if animal == "Bat":
-            genus, family = BAT_GENERA.get(species), BAT_FAMILY[0]
+            genus, family = bat_genus, BAT_FAMILIES.get(bat_genus, BAT_FAMILY)[0]
         elif species != "Unknown":
             sci = self.scientific.get(species, "")
             genus = sci.split()[0] if sci else None
@@ -298,100 +266,6 @@ def normalize_species(raw, codes, names):
     return s[:1].upper() + s[1:], False
 
 
-# ---- date, condition, animal ----
-
-def parse_find_date(find_id, fallback):
-    """Date from the find ID (2023-09-15-B01-01); falls back to the Date column (9/15/2023)."""
-    m = re.match(r"\s*(\d{2,4})[-.]?(\d{1,2})[-.]?(\d{1,2})(?:\D|$)", find_id or "")
-    if m:
-        y, mo, d = (int(g) for g in m.groups())
-        y += 2000 if y < 100 else 0
-        try:
-            return date(y, mo, d).isoformat(), "id"
-        except ValueError:
-            pass
-    m = re.match(r"\s*(\d{1,2})/(\d{1,2})/(\d{4})\s*$", fallback or "")
-    if m:
-        mo, d, y = (int(g) for g in m.groups())
-        try:
-            return date(y, mo, d).isoformat(), "date column"
-        except ValueError:
-            pass
-    return None, None
-
-
-def normalize_status(condition, found):
-    """Deceased or Alive from the condition column, or from "What did you find" when condition is blank."""
-    c = condition.lower()
-    if "deceased" in c or "died" in c:
-        return "Deceased"
-    if "alive" in c or "escaped" in c:
-        return "Alive"
-    if not c.strip():
-        f = found.lower()
-        if "deceased" in f:
-            return "Deceased"
-        if "alive" in f:
-            return "Alive"
-    return None
-
-
-def normalize_animal(found, species, is_bird_name):
-    """A named species decides; for "Unknown" fall back to the "What did you find" box."""
-    if "bat" in species.lower().split() or species.endswith("Myotis"):
-        return "Bat"
-    if is_bird_name:
-        return "Bird"
-    parts = {p.strip().lower() for p in found.split(",")}
-    return "Bat" if "bat" in parts and "bird" not in parts else "Bird"
-
-
-def normalize(rows):
-    if not rows:
-        return [], {}
-    cols = resolve_columns(list(rows[0].keys()))
-    codes, names = load_alpha_codes()
-    taxonomy = Taxonomy()
-    out, report = [], {"skipped": Counter(), "date from": Counter(), "id/date mismatch": [], "unmatched species": Counter()}
-    for row in rows:
-        get = lambda k: (row.get(cols[k]) or "").strip()
-        raw_species = get("species")
-        if NOT_BIRD_OR_BAT.search(raw_species):
-            report["skipped"]["not a bird or bat"] += 1
-            continue
-        status = normalize_status(get("condition"), get("found"))
-        if status is None:
-            report["skipped"]["no dead/alive condition"] += 1
-            continue
-        found_on, source = parse_find_date(get("find_id"), get("date"))
-        if found_on is None:
-            report["skipped"]["no readable date"] += 1
-            continue
-        sheet_date, _ = parse_find_date("", get("date"))
-        if source == "id" and sheet_date and sheet_date != found_on:
-            if sheet_date[:4] != found_on[:4]:
-                # Wrong year in the ID ("2014-05-21-..." entered 2024); the Date column matches the form timestamp
-                found_on, source = sheet_date, "date column (year typo in ID)"
-            else:
-                report["id/date mismatch"].append((get("find_id"), get("date")))
-        report["date from"][source] += 1
-        species, matched = normalize_species(raw_species, codes, names)
-        if not matched:
-            report["unmatched species"][raw_species] += 1
-        animal = normalize_animal(get("found"), species, matched and species != "Unknown")
-        out.append({
-            "date": found_on,
-            "animal": animal,
-            "status": status,
-            "species": species,
-            **taxonomy.of(species, animal, raw_species),
-            "source": "CUSRT",
-        })
-    out.sort(key=lambda r: (r["date"], r["species"]))
-    report["no family"] = taxonomy.missing
-    return out, report
-
-
 # ---- Global Bird Collision Mapper (birdmapper.org) ----
 
 def fetch_gbcm(bbox=CALGARY_BBOX, group=None):
@@ -415,19 +289,54 @@ def fetch_gbcm(bbox=CALGARY_BBOX, group=None):
         offset += len(batch)
 
 
+def load_bat_species():
+    """[(pattern, species, genus, alone)] from NABat's species codes, most specific first.
+
+    alone: the match is enough on its own to call the report a bat (scientific names, and NABat codes that aren't
+    also bird codes, e.g. not CORA = Common Raven). Common names and BAT_ALIASES need "bat"/"myotis" in the report too.
+    """
+    bird_codes = {r["code"] for r in read_reference(ALPHA_CODES)}
+    by_code, names = {}, []
+    for r in read_reference(NABAT_CODES):
+        common, scientific, code = r["Common name"], r["Scientific name"], r["Code"]
+        common = re.sub(r"\s+", " ", common.split(";")[-1]).strip()  # "ʻōpeʻapeʻa; Hawaiian hoary bat"
+        scientific = re.sub(r"\s+", " ", scientific).strip()
+        code = code.strip()
+        by_code[code] = (" ".join(w[:1].upper() + w[1:] for w in common.split()),  # "Silver-haired Bat"
+                         scientific.split()[0])
+        # "silver-haired bat" also matches "silver haired bat" and "silver-haired"; one-word names ("gray bat",
+        # "evening bat") keep "bat" so they don't match ordinary words
+        words = re.split(r"[-\s]+", common.lower())
+        if words[-1] == "bat" and (len(words) > 2 or "-" in common):
+            words = words[:-1]
+        sep = r"[-\s]?"
+        names.append((len(common), sep.join(map(re.escape, words)) + rf"(?:{sep}bat)?", code, False))
+        names.append((len(scientific), re.escape(scientific), code, True))
+    patterns = [(re.compile(rf"\b{p}\b", re.I), *by_code[code], alone)
+                for _, p, code, alone in sorted(names, key=lambda t: -t[0])]
+    patterns += [(re.compile(rf"\b{p}", re.I), *by_code[code], False) for p, code in BAT_ALIASES.items()]
+    patterns += [(re.compile(rf"\b{code}\b"), *species, code not in bird_codes)  # codes only in capitals
+                 for code, species in by_code.items()]
+    return patterns
+
+
+BAT_SPECIES = load_bat_species()
+
+
 def gbcm_bat(rec):
-    """Bat species name if this report is a bat, else None.
+    """(species, genus) if this report is a bat, else None; ("Unknown", None) when the bat isn't named.
 
     GBCM has no bat species, so teams log bats as "No Birds Found"/"Unknown" and describe them in the notes.
     """
     text = f"{rec.get('species') or ''} {rec.get('notes') or ''}"
     text = BAT_NOT_A_FIND.sub("", text)
-    if not BAT_MENTION.search(text):
-        return None
-    for pattern, name in BAT_SPECIES:
-        if re.search(pattern, text, re.I):
-            return name
-    return "Unknown"
+    says_bat = BAT_MENTION.search(text) or BAT_GENUS_ONLY.search(text)
+    for pattern, species, genus, alone in BAT_SPECIES:
+        if pattern.search(text) and (alone or says_bat):
+            return species, genus
+    if says_bat:
+        return "Unknown", "Myotis" if BAT_GENUS_ONLY.search(text) else None
+    return None
 
 
 def gbcm_bat_status(rec):
@@ -494,9 +403,10 @@ def normalize_gbcm(records):
         species, matched = normalize_species(raw, codes, names)
         is_bird_name = matched and species != "Unknown"
         bat = None if is_bird_name else gbcm_bat(rec)
+        bat_genus = None
 
         if bat:
-            animal, species = "Bat", bat
+            animal, (species, bat_genus) = "Bat", bat
             status = gbcm_bat_status(rec)
             if status is None:
                 report["skipped"]["bat with no dead/alive in notes"] += 1
@@ -534,7 +444,7 @@ def normalize_gbcm(records):
         source = gbcm_source(rec)
         if why := possible_wildlife_org(rec):
             report["wildlife org to check"].append((rec["objectid"], found_on, why))
-        taxa = taxonomy.of(species, animal, raw)
+        taxa = taxonomy.of(species, animal, raw, bat_genus)
         org = {"organization": WILDLIFE_ORG_REPORTS[rec["objectid"]]} if source == "Other Wildlife Organization" else {}
         report["date from"]["dateutc (Calgary time)"] += 1
         for st, n in counts.items():
@@ -563,10 +473,6 @@ def print_report(finds, report):
         print(f"  possible wildlife organization find, needs a CUSRT check (add to WILDLIFE_ORG_REPORTS): "
               f"objectid {objectid} ({found_on}): {why}")
     print("Date taken from:", dict(report["date from"]))
-    if report.get("id/date mismatch"):
-        print(f"{len(report['id/date mismatch'])} find IDs disagree with the Date column (ID was used):")
-        for find_id, d in report["id/date mismatch"]:
-            print(f"  {find_id!r:32} Date column: {d}")
     if report["unmatched species"]:
         print("Species not in the alpha-code list (kept as written; add to SPECIES_FIXES if needed):")
         for s, n in report["unmatched species"].most_common():
@@ -579,16 +485,12 @@ def print_report(finds, report):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--csv", help="use the CUSRT sheet (file path or CSV URL) instead of BirdMapper")
     parser.add_argument("--group", help='only BirdMapper reports from this team, e.g. "Calgary Urban Species Response Team"')
     parser.add_argument("--bbox", default=CALGARY_BBOX, help=f"lon/lat area to pull (default Calgary: {CALGARY_BBOX})")
     parser.add_argument("--out", default=str(OUT))
     args = parser.parse_args()
 
-    if args.csv:
-        finds, report = normalize(read_csv(args.csv))
-    else:
-        finds, report = normalize_gbcm(fetch_gbcm(args.bbox, args.group))
+    finds, report = normalize_gbcm(fetch_gbcm(args.bbox, args.group))
     if not finds:
         sys.exit("No finds after normalization; refusing to overwrite the existing data.")
 

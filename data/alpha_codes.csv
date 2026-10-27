@@ -1,3 +1,6 @@
+# Four-letter (English name) and six-letter (scientific name) alpha codes, in accordance with the 66th AOS
+# Supplement (2025). Prepared by Peter Pyle and David F. DeSante, The Institute for Bird Populations:
+# https://www.birdpop.org/pages/birdSpeciesCodes.php  Lines starting with # are notes.
 code,english_name,scientific_name
 ABDU,American Black Duck,Anas rubripes
 ABFL,Asian Brown Flycatcher,Muscicapa dauurica

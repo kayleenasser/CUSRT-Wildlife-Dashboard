@@ -1,0 +1,57 @@
+# Bat species codes from the North American Bat Monitoring Program (NABat), https://www.nabatmonitoring.org/species-codes
+# Credit: NABat. Single-species codes only. Lines starting with # are notes.
+Common name,Scientific name,Code,Code (6-letter)
+pallid bat,Antrozous pallidus,ANPA,ANTPAL
+Jamaican fruit-eating bat,Artibeus jamaicensis,ARJA,ARTJAM
+Antillean fruit-eating bat,Brachyphylla cavernarum,BRCA,BRACAV
+Mexican long-tongued bat,Choeronycteris mexicana,CHME,CHOMEX
+Rafinesque's big-eared bat,Corynorhinus rafinesquii,CORA,CORRAF
+Townsend's big-eared bat,Corynorhinus townsendii,COTO,CORTOW
+Ozark big-eared bat,Corynorhinus townsendii ingens,COTI,COTOIN
+Virginia big-eared bat,Corynorhinus townsendii virginianus,COTV,COTOVI
+hairy-legged vampire bat,Diphylla ecaudata,DIEC,DIPECA
+big brown bat,Eptesicus fuscus,EPFU,EPTFUS
+spotted bat,Euderma maculatum,EUMA,EUDMAC
+Florida bonneted bat,Eumops floridanus,EUFL,EUMFLO
+greater bonneted bat,Eumops perotis,EUPE,EUMPER
+Underwood's bonneted bat,Eumops underwoodi,EUUN,EUMUND
+Allen's big-eared bat,Idionycteris phyllotis,IDPH,IDIPHY
+silver-haired bat,Lasionycteris noctivagans,LANO,LASNOC
+eastern red bat,Lasiurus borealis,LABO,LASBOR
+hoary bat,Lasiurus cinereus,LACI,LASCIN
+ʻōpeʻapeʻa; Hawaiian hoary bat,Lasiurus cinereus semotus,LACS,LACISE
+southern yellow bat,Lasiurus ega,LAEG,LASEGA
+desert red bat,Lasiurus frantzii,LAFR,LASFRA
+northern yellow bat,Lasiurus intermedius,LAIN,LASINT
+minor red bat,Lasiurus minor,LAMI,LASMIN
+Seminole bat,Lasiurus seminolus,LASE,LASSEM
+western yellow bat,Lasiurus xanthinus,LAXA,LASXAN
+Mexican long-nosed bat,Leptonycteris nivalis,LENI,LEPNIV
+lesser long-nosed bat,Leptonycteris yerbabuenae,LEYE,LEPYER
+California leaf-nosed bat,Macrotus californicus,MACA,MACCAL
+Pallas' mastiff bat,Molossus  molossus,MOMO,MOLMOL
+Peter's ghost-faced bat,Mormoops megalophylla,MOME,MORMEG
+southwestern myotis,Myotis auriculus,MYAR,MYOAUR
+southeastern myotis,Myotis austroriparius,MYAU,MYOAUS
+California myotis,Myotis californicus,MYCA,MYOCAL
+western small-footed myotis,Myotis ciliolabrum,MYCI,MYOCIL
+long-eared myotis,Myotis evotis,MYEV,MYOEVO
+gray bat,Myotis grisescens,MYGR,MYOGRI
+Keen's myotis,Myotis keenii,MYKE,MYOKEE
+eastern small-footed myotis,Myotis leibii,MYLE,MYOLEI
+little brown bat,Myotis lucifugus,MYLU,MYOLUC
+Arizona myotis,Myotis occultus,MYOC,MYOOCC
+northern long-eared bat,Myotis septentrionalis,MYSE,MYOSEP
+Indiana bat,Myotis sodalis,MYSO,MYOSOD
+fringed myotis,Myotis thysanodes,MYTH,MYOTHY
+cave bat myotis,Myotis velifer,MYVE,MYOVEL
+long-legged myotis,Myotis volans,MYVO,MYOVOL
+Yuma myotis,Myotis yumanensis,MYYU,MYOYUM
+greater bulldog bat,Noctilio leporinus,NOLE,NOCLEP
+evening bat,Nycticeius humeralis,NYHU,NYCHUM
+pocketed free-tailed bat,Nyctinomops femorosaccus,NYFE,NYCFEM
+big free-tailed bat,Nyctinomops macrotis,NYMA,NYCMAC
+canyon bat,Parastrellus hesperus,PAHE,PARHES
+tri-colored  bat,Perimyotis subflavus,PESU,PERSUB
+red fruit bat,Stenoderma rufum,STRU,STERUF
+Brazilian free-tailed bat,Tadarida brasiliensis,TABR,TADBRA

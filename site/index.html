@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Calgary Bird Collisions &amp; Bat Rescues</title>
+  <title>CUSRT Wildlife Dashboard</title>
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -126,14 +126,41 @@
     }
 
     .hero .wrap {
-      padding-block: 44px 36px;
+      padding-block: 34px 28px;
+    }
+
+    .intro {
+      margin-top: 12px;
+      color: #d5e2e6;
+      font-size: .95rem;
+    }
+
+    .intro p {
+      margin: 0 0 8px;
+    }
+
+    .intro p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Darker panel inside the header, so the summary and year filter read apart from the description */
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 22px;
+      padding: 14px 20px;
+      background: var(--teal-dark);
+      color: #fff;
+      border-radius: 8px;
     }
 
     .headline {
       font-size: 1.05rem;
-      margin: 14px 0 0;
+      margin: 0;
       color: #e6eef0;
-      max-width: 46em;
     }
 
     .headline strong {
@@ -146,7 +173,6 @@
       flex-wrap: wrap;
       gap: 12px;
       align-items: center;
-      margin-top: 26px;
     }
 
     .filters label {
@@ -176,7 +202,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 20px;
     }
 
@@ -198,6 +224,21 @@
       grid-column: 1 / -1;
     }
 
+    /* The chart area takes whatever height the card has left; renderMonths sizes the chart to it */
+    .card.fill {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card.fill #months {
+      flex: 1 1 auto;
+      min-height: 200px;
+    }
+
+    #months svg {
+      display: block;
+    }
+
     .card header {
       display: flex;
       flex-wrap: wrap;
@@ -213,6 +254,14 @@
       margin: 2px 0 0;
     }
 
+    .footnote {
+      color: var(--ink-3);
+      font-size: .78rem;
+      margin: 14px 0 0;
+      padding-left: 10px;
+      border-left: 3px solid var(--teal-dark);
+    }
+
     .donut-row {
       display: flex;
       flex-wrap: wrap;
@@ -222,7 +271,7 @@
     }
 
     #donut {
-      width: 220px;
+      width: 170px;
       max-width: 100%;
     }
 
@@ -369,6 +418,31 @@
       outline-color: var(--teal);
     }
 
+    /* Full-width closing card: text and button side by side, stacking on narrow screens */
+    .cta.wide {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      border-width: 1px;
+      border-color: var(--rule);
+    }
+
+    .cta.wide>div {
+      flex: 1 1 280px;
+    }
+
+    .cta-logo-link {
+      flex: none;
+      line-height: 0;
+    }
+
+    .cta-logo {
+      flex: none;
+      width: auto;
+      height: 56px;
+    }
+
     .cta h2 {
       color: #fff;
       font-size: 1.3rem;
@@ -426,6 +500,52 @@
       font-variant-numeric: tabular-nums;
     }
 
+    /* Animal filter, species / genus / family tabs and sort, each centred in a third; stacked on narrow screens */
+    .chart-controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      justify-items: center;
+      align-items: center;
+      gap: 8px 16px;
+      margin-bottom: 12px;
+    }
+
+    .tab-stack {
+      display: contents;
+    }
+
+    @media (max-width: 760px) {
+      .chart-controls {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: start;
+        row-gap: 16px;  /* room between the stacked controls so a tap doesn't land on the wrong row */
+      }
+    }
+
+    .chart-controls .tabs {
+      margin-bottom: 0;
+    }
+
+    .sort {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: .82rem;
+      font-weight: 400;
+      color: var(--ink-2);
+    }
+
+    .sort select {
+      font-size: .82rem;
+      background: var(--grid);
+      min-height: 36px;
+      padding: 6px 14px;
+    }
+
+    .sort select:focus-visible {
+      outline-color: var(--teal);
+    }
+
     .tabs {
       display: inline-flex;
       gap: 4px;
@@ -449,7 +569,8 @@
       color: var(--teal);
     }
 
-    .tabs button[aria-selected="true"] {
+    .tabs button[aria-selected="true"],
+    .tabs button[aria-checked="true"] {
       background: var(--teal);
       color: #fff;
     }
@@ -681,13 +802,24 @@
 
   <section class="hero">
     <div class="wrap">
-      <h1>Bird collisions &amp; bat rescues in Calgary</h1>
-      <p class="headline" id="headline">Loading finds…</p>
-      <div class="filters">
-        <label for="year">Year</label>
-        <select id="year">
-          <option value="all">All years</option>
-        </select>
+      <h1>CUSRT Wildlife Dashboard</h1>
+      <div class="intro">
+        <p>Since 2019, the Calgary Urban Species Response Team (CUSRT) has documented birds and bats affected by the
+          architectural hazards of Calgary's downtown core.</p>
+        <p>This dashboard summarizes these records from the
+          <a href="https://www.birdmapper.org/" target="_blank" rel="noopener">Global Bird Collision Mapper®</a>,
+          <a href="https://www.flap.org/" target="_blank" rel="noopener">FLAP Canada</a>'s international database. It
+          includes reports from CUSRT volunteers, members of the public, and other wildlife organizations.
+        </p>
+      </div>
+      <div class="summary" role="region" aria-label="Summary and year filter">
+        <p class="headline" id="headline">Loading records…</p>
+        <div class="filters">
+          <label for="year">Year</label>
+          <select id="year">
+            <option value="all">All years</option>
+          </select>
+        </div>
       </div>
     </div>
   </section>
@@ -697,25 +829,30 @@
       <section class="card">
         <header>
           <div>
-            <h2>Overall finds</h2>
+            <h2>Status</h2>
             <p class="sub">Deceased and live birds and bats</p>
           </div>
         </header>
         <div class="donut-row">
-          <svg id="donut" viewBox="0 0 220 220" role="img" aria-label="Donut chart of finds by category"></svg>
+          <svg id="donut" viewBox="0 0 220 220" role="img" aria-label="Donut chart of records by category"></svg>
           <ul class="legend" id="donut-legend"></ul>
         </div>
+        <p class="footnote">Bats may be grounded for a variety of reasons including window collisions, poor weather,
+          disorientation, or illness.</p>
+        <p class="footnote">Live birds and bats who can be safely contained are taken to a
+          <a href="https://www.calgaryurbanspecies.ca/find-a-wildlife-rehab" target="_blank" rel="noopener">wildlife
+            rehabilitation clinic</a> for appropriate diagnosis and treatment.</p>
         <details>
           <summary>Show as table</summary>
           <div class="tbl-wrap" id="tbl-category"></div>
         </details>
       </section>
 
-      <section class="card">
+      <section class="card fill">
         <header>
           <div>
-            <h2>Time of year</h2>
-            <p class="sub">Finds per month</p>
+            <h2>Seasonal distribution</h2>
+            <p class="sub">Records per month</p>
           </div>
         </header>
         <div id="months"></div>
@@ -728,8 +865,8 @@
       <section class="card wide">
         <header>
           <div>
-            <h2 id="species-title">Finds by species</h2>
-            <p class="sub" id="species-sub">Most common first</p>
+            <h2 id="species-title">Records by species</h2>
+            <p class="sub" id="species-sub"></p>
             <div class="id-share">
               <svg id="id-donut" width="48" height="48" viewBox="0 0 48 48" role="img"></svg>
               <ul id="id-legend"></ul>
@@ -740,13 +877,28 @@
             <span><i class="sw" style="background:var(--species-bat)"></i>Bat</span>
           </div>
         </header>
-        <div class="tabs" role="tablist" aria-label="Group finds by">
-          <button role="tab" id="tab-species" data-level="species" aria-selected="true"
-            aria-controls="species-panel">Species</button>
-          <button role="tab" id="tab-genus" data-level="genus" aria-selected="false" aria-controls="species-panel"
-            tabindex="-1">Genus</button>
-          <button role="tab" id="tab-family" data-level="family" aria-selected="false" aria-controls="species-panel"
-            tabindex="-1">Family</button>
+        <div class="chart-controls">
+          <div class="tab-stack">
+            <div class="tabs" role="radiogroup" aria-label="Show records for">
+              <button role="radio" data-animal="all" aria-checked="true">All animals</button>
+              <button role="radio" data-animal="Bird" aria-checked="false" tabindex="-1">Birds</button>
+              <button role="radio" data-animal="Bat" aria-checked="false" tabindex="-1">Bats</button>
+            </div>
+            <div class="tabs" role="tablist" aria-label="Group records by">
+              <button role="tab" id="tab-species" data-level="species" aria-selected="true"
+                aria-controls="species-panel">Species</button>
+              <button role="tab" id="tab-genus" data-level="genus" aria-selected="false" aria-controls="species-panel"
+                tabindex="-1">Genus</button>
+              <button role="tab" id="tab-family" data-level="family" aria-selected="false" aria-controls="species-panel"
+                tabindex="-1">Family</button>
+            </div>
+          </div>
+          <label class="sort">Sort
+            <select id="sort">
+              <option value="desc">Most common first</option>
+              <option value="asc">Least common first</option>
+            </select>
+          </label>
         </div>
         <div id="species-panel" role="tabpanel" aria-labelledby="tab-species">
           <div class="species-scroll">
@@ -763,8 +915,11 @@
       <section class="card wide">
         <header>
           <div>
-            <h2>Who reported</h2>
-            <p class="sub">Reports on the Global Bird Collision Mapper by CUSRT volunteers, the public, and other wildlife organizations</p>
+            <h2>Reporting source</h2>
+            <p class="sub">Reports on the
+              <a href="https://www.birdmapper.org/" target="_blank" rel="noopener">Global Bird Collision Mapper®</a> by
+              CUSRT volunteers, the public, and other wildlife organizations
+            </p>
           </div>
         </header>
         <div class="src-bar" id="src-bar"></div>
@@ -775,30 +930,50 @@
     <div class="cta-row">
       <section class="cta">
         <div>
-          <h2>Found a deceased bird near a window?</h2>
-          <p>Be a community scientist: report it on the Global Bird Collision Mapper® and it will be counted here.</p>
+          <h2>Found an injured or deceased bird near a window?</h2>
+          <p>Become a community scientist! Report your find to CUSRT and we'll log it on the
+            <a href="https://www.birdmapper.org/" target="_blank" rel="noopener">Global Bird Collision Mapper®</a>. From
+            there it will appear on our local dashboard automatically.
+          </p>
+          <p>Thank you for your contribution!</p>
         </div>
-        <a class="cta-btn" href="https://survey123.arcgis.com/share/6c4ce7f4778d49c39fffcaed22caf935" target="_blank"
-          rel="noopener">Report a collision</a>
+        <a class="cta-btn"
+          href="https://docs.google.com/forms/d/e/1FAIpQLScY_5oKb9ypPsZ-rWZJplglnQAusV9TvTl6mrG-kET7RsmH0Q/viewform"
+          target="_blank" rel="noopener">Report a collision</a>
       </section>
 
       <section class="cta alt">
         <div>
-          <h2>Want to get involved?</h2>
-          <p>Join CUSRT's volunteers on surveys to participate in rescues and data collection across downtown Calgary.</p>
+          <h2>Want to get involved with bird and bat conservation?</h2>
+          <p>Join CUSRT's volunteers on surveys across downtown Calgary, documenting window strike collisions and
+            rescuing wildlife in need. Every record builds the data behind this dashboard and helps to advocate for a
+            more bird-safe city.</p>
         </div>
-        <a class="cta-btn"
-          href="https://docs.google.com/forms/d/e/1FAIpQLSf5bSMt_jFWqYKSeoUYyvak9hWSyyTAKI4hmSdz6l5gVkH8oQ/viewform"
-          target="_blank" rel="noopener">Apply to volunteer</a>
+        <a class="cta-btn" href="https://www.calgaryurbanspecies.ca/general-8" target="_blank" rel="noopener">Apply to
+          volunteer</a>
+      </section>
+
+      <section class="cta alt wide">
+        <a class="cta-logo-link" href="https://www.birdmapper.org/" target="_blank" rel="noopener"><img class="cta-logo"
+            src="birdmapper-logo.png" alt="Global Bird Collision Mapper" width="181" height="56"></a>
+        <div>
+          <h2>Explore the map</h2>
+          <p>To learn more about where window collisions are happening, visit
+            <a href="https://www.flap.org/" target="_blank" rel="noopener">FLAP Canada</a>'s
+            <a href="https://www.birdmapper.org/" target="_blank" rel="noopener">Global Bird Collision Mapper®</a>.
+          </p>
+        </div>
+        <a class="cta-btn" href="https://www.birdmapper.org/pages/explore-the-map" target="_blank"
+          rel="noopener">Explore
+          the map</a>
       </section>
     </div>
   </main>
 
   <footer>
     <div class="wrap">Data includes every report in the Calgary area on the
-      <a href="https://www.birdmapper.org/">Global Bird Collision Mapper®</a>. Grounded bats are counted as rescues,
-      since the cause (weather, window collisions, disorientation, illness, etc.) can't always be verified. Data updated
-      hourly.
+      <a href="https://www.birdmapper.org/" target="_blank" rel="noopener">Global Bird Collision Mapper®</a>. Data
+      updated every 6 hours.
     </div>
   </footer>
   <div id="tip" hidden></div>
@@ -812,8 +987,9 @@
     </header>
     <div class="body">
       <div class="tbl-wrap" id="reports-table" style="max-height:none"></div>
-      <p class="note">Report # is the BirdMapper record number. Your team can look up a report's full details in the
-        Global Bird Collision Mapper®.</p>
+      <p class="note">Report # is the BirdMapper record number. Full report details are available on the
+        <a href="https://www.birdmapper.org/" target="_blank" rel="noopener">Global Bird Collision Mapper®</a>.
+      </p>
     </div>
   </dialog>
 
@@ -825,10 +1001,10 @@
     const DATA_URL = "../data/collisions.json";
     const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const CATEGORIES = [
-      { key: "Deceased birds", animal: "Bird", status: "Deceased", color: "var(--deceased-bird)" },
-      { key: "Live birds", animal: "Bird", status: "Alive", color: "var(--live-bird)" },
-      { key: "Deceased bats", animal: "Bat", status: "Deceased", color: "var(--deceased-bat)" },
-      { key: "Live bats", animal: "Bat", status: "Alive", color: "var(--live-bat)" },
+      { key: "Birds - Deceased", animal: "Bird", status: "Deceased", color: "var(--deceased-bird)" },
+      { key: "Birds - Live", animal: "Bird", status: "Alive", color: "var(--live-bird)" },
+      { key: "Bats- Deceased", animal: "Bat", status: "Deceased", color: "var(--deceased-bat)" },
+      { key: "Bats- Live", animal: "Bat", status: "Alive", color: "var(--live-bat)" },
     ];
     const ANIMAL_COLOR = { Bird: "var(--species-bird)", Bat: "var(--species-bat)" };
     const SOURCES = [
@@ -836,12 +1012,15 @@
       { key: "Public", label: "Reported by the public", color: "var(--src-public)" },
       { key: "Other Wildlife Organization", label: "Reported by other wildlife organization", color: "var(--src-wildlife)" },
     ];
-    const SPECIES_PREVIEW = 20;
+    const SPECIES_PREVIEW = 15;
 
     let finds = [];
     let year = "all";
     let showAllSpecies = false;
     let level = "species";
+    let animal = "all";  // species chart filter: "all", "Bird" or "Bat"
+    const inAnimal = r => animal === "all" || r.animal === animal;
+    let sortOrder = "desc";  // species chart: "desc" = most common first, "asc" = least common first
 
     const fmt = d3.format(",");
     const pct = n => (n * 100).toFixed(n > 0 && n < 0.01 ? 1 : 0) + "%";
@@ -881,7 +1060,7 @@
       return { byCategory, bySpecies, byMonth, bySource, total: rows.length };
     }
 
-    // Finds per species, genus or family (the current tab), most common first, with the species seen in each group
+    // Finds per species, genus or family (the current tab) in the chosen sort order, with the species seen in each group
     function groupFinds(rows) {
       const L = LEVELS[level];
       return d3.rollups(rows.filter(L.key), v => v, L.key, r => r.animal)
@@ -890,7 +1069,7 @@
           species: d3.rollups(v.filter(r => !isUnknown(r.species)), s => s.length, r => r.species)
             .sort((a, b) => d3.descending(a[1], b[1])).map(([s]) => s),
         })))
-        .sort((a, b) => d3.descending(a.n, b.n) || d3.ascending(a.key, b.key));
+        .sort((a, b) => (sortOrder === "asc" ? d3.ascending(a.n, b.n) : d3.descending(a.n, b.n)) || d3.ascending(a.key, b.key));
     }
 
     // ---- rounded-end bar paths (4px radius on the data end, square on the baseline) ----
@@ -916,7 +1095,7 @@
     // Makes chart parts with finds open the pop-up on click, Enter or Space. rows(d) = the finds behind part d.
     function clickable(sel, rows, title, opts = {}) {
       sel.filter(d => d.n > 0).classed("clickable", true).attr("tabindex", 0).attr("role", "button")
-        .attr("aria-label", d => `${title(d)}: ${fmt(d.n)} finds. Show reports`)
+        .attr("aria-label", d => `${title(d)}: ${fmt(d.n)} records. Show reports`)
         .on("click", (ev, d) => { hideTip(); openReports(rows(d), title(d), opts); })
         .on("keydown", (ev, d) => {
           if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openReports(rows(d), title(d), opts); }
@@ -928,8 +1107,8 @@
       const top = agg.bySpecies.find(s => !isUnknown(s.species));
       const scope = year === "all" ? "across all years" : `in ${year}`;
       document.getElementById("headline").innerHTML =
-        `<strong>${fmt(agg.total)}</strong> finds in Calgary ${scope}.` +
-        (top ? ` Most often found: <strong>${esc(top.species)}</strong> (${fmt(top.n)}).` : "");
+        `<strong>${fmt(agg.total)}</strong> records ${scope}.` +
+        (top ? ` Most frequently recorded: <strong>${esc(top.species)}</strong> (${fmt(top.n)}).` : "");
     }
 
     function renderDonut(agg) {
@@ -956,7 +1135,7 @@
         g.append("circle").attr("r", (R + r) / 2).attr("fill", "none").attr("stroke", "var(--grid)").attr("stroke-width", R - r);
       }
       g.append("text").attr("class", "centre-n").attr("text-anchor", "middle").attr("dy", "0.2em").text(fmt(agg.total));
-      g.append("text").attr("text-anchor", "middle").attr("dy", "2.2em").text("finds");
+      g.append("text").attr("text-anchor", "middle").attr("dy", "2.2em").text("records");
 
       document.getElementById("donut-legend").innerHTML = agg.byCategory.map(d =>
         `<li><i class="sw" style="background:${d.color}"></i><span>${d.key}</span>
@@ -964,17 +1143,19 @@
       d3.select("#donut-legend").selectAll("li").data(agg.byCategory).call(clickable, categoryRows, d => d.key);
 
       table(document.getElementById("tbl-category"),
-        [{ label: "Category", get: d => d.key }, { label: "Finds", num: true, get: d => fmt(d.n) },
+        [{ label: "Category", get: d => d.key }, { label: "Records", num: true, get: d => fmt(d.n) },
         { label: "Share", num: true, get: d => agg.total ? pct(d.n / agg.total) : "–" }], agg.byCategory);
     }
 
     function renderMonths(agg) {
       const el = document.getElementById("months");
-      const W = Math.max(280, el.clientWidth), H = 240, m = { t: 10, r: 6, b: 24, l: 32 };
+      d3.select(el).html("");
+      // Fill the card's leftover height so it lines up with the Status card beside it (200 when stacked)
+      const W = Math.max(280, el.clientWidth), H = Math.max(200, el.clientHeight), m = { t: 10, r: 6, b: 24, l: 32 };
       const x = d3.scaleBand().domain(MONTHS).range([m.l, W - m.r]).paddingInner(0.25).paddingOuter(0.1);
       const y = d3.scaleLinear().domain([0, d3.max(agg.byMonth, d => d.n) || 1]).nice().range([H - m.b, m.t]);
-      const svg = d3.select(el).html("").append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("width", "100%")
-        .attr("role", "img").attr("aria-label", "Bar chart of finds per month");
+      const svg = d3.select(el).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("width", "100%")
+        .attr("role", "img").attr("aria-label", "Bar chart of records per month");
 
       svg.append("g").attr("class", "grid").selectAll("line").data(y.ticks(4)).join("line")
         .attr("x1", m.l).attr("x2", W - m.r).attr("y1", d => y(d)).attr("y2", d => y(d));
@@ -992,23 +1173,23 @@
         .attr("y", m.t).attr("height", H - m.b - m.t).attr("fill", "transparent")
         .on("mousemove", (ev, d) => {
           bars.classed("dim", true).selectAll("path").classed("on", b => b === d);
-          showTip(ev, `<b>${MONTHS[d.month - 1]}</b><br>${fmt(d.n)} finds` + (d.n ? "<br>Click to see reports" : ""));
+          showTip(ev, `<b>${MONTHS[d.month - 1]}</b><br>${fmt(d.n)} records` + (d.n ? "<br>Click to see reports" : ""));
         })
         .on("mouseleave", () => { bars.classed("dim", false); hideTip(); })
         .call(clickable, d => currentRows.filter(r => +r.date.slice(5, 7) === d.month),
           d => new Date(2000, d.month - 1, 1).toLocaleDateString("en-CA", { month: "long" }));
 
       table(document.getElementById("tbl-month"),
-        [{ label: "Month", get: d => d.label }, { label: "Finds", num: true, get: d => fmt(d.n) }], agg.byMonth);
+        [{ label: "Month", get: d => d.label }, { label: "Records", num: true, get: d => fmt(d.n) }], agg.byMonth);
     }
 
-    function tipFor(d, agg) {
+    function tipFor(d, total) {
       const L = LEVELS[level];
       const name = L.italic ? `<i>${esc(d.key)}</i>` : esc(level === "family" ? d.common : d.key);
       const family = level === "genus" && d.family ? `<br>${esc(d.common)} (${esc(d.family)})` : level === "family" ? `<br>${esc(d.key)}` : "";
       const more = d.species.length > 3 ? `, +${d.species.length - 3} more` : "";
       const species = level !== "species" && d.species.length ? `<br>${d.species.slice(0, 3).map(esc).join(", ")}${more}` : "";
-      return `<b>${name}</b>${family}<br>${d.animal} · ${fmt(d.n)} finds · ${pct(d.n / agg.total)} of all${species}<br>Click to see reports`;
+      return `<b>${name}</b>${family}<br>${d.animal} · ${fmt(d.n)} records · ${pct(d.n / total)} of all${species}<br>Click to see reports`;
     }
 
     // Small donut under the species chart's subtitle: how many finds could be named at the current tab's level
@@ -1020,16 +1201,16 @@
       ];
       const share = d => total ? pct(d.n / total) : "–";
       const key = LEVELS[level].key;
-      const partRows = d => currentRows.filter(r => d.label === "Not identified" ? !key(r) : key(r));
+      const partRows = d => currentRows.filter(r => inAnimal(r) && (d.label === "Not identified" ? !key(r) : key(r)));
       const svg = d3.select("#id-donut").attr("aria-label",
-        `${fmt(known)} of ${fmt(total)} finds identified to ${name}, ${fmt(unknown)} not identified`);
+        `${fmt(known)} of ${fmt(total)} records identified to ${name}, ${fmt(unknown)} not identified`);
       svg.selectAll("*").remove();
       const g = svg.append("g").attr("transform", "translate(24,24)");
       const arc = d3.arc().innerRadius(14).outerRadius(23);
       if (total) {
         g.selectAll("path").data(d3.pie().value(d => d.n).sort(null)(parts.filter(d => d.n > 0))).join("path")
           .attr("d", arc).attr("fill", d => d.data.color).attr("stroke", "var(--card)").attr("stroke-width", 1.5)
-          .on("mousemove", (ev, d) => showTip(ev, `<b>${d.data.label}</b><br>${fmt(d.data.n)} finds · ${share(d.data)}<br>Click to see reports`))
+          .on("mousemove", (ev, d) => showTip(ev, `<b>${d.data.label}</b><br>${fmt(d.data.n)} records · ${share(d.data)}<br>Click to see reports`))
           .on("mouseleave", hideTip)
           .datum(d => ({ ...d, n: d.data.n }))
           .call(clickable, d => partRows(d.data), d => d.data.label);
@@ -1044,25 +1225,26 @@
     function renderSpecies(agg) {
       const el = document.getElementById("species");
       const L = LEVELS[level];
-      document.getElementById("species-title").textContent = `Finds by ${L.name}`;
+      document.getElementById("species-title").textContent = `Records by ${L.name}`;
       // Unidentified finds would dwarf every bar, so they're counted in the subtitle and donut instead
-      const all = groupFinds(currentRows);
-      const unknown = agg.total - d3.sum(all, d => d.n);
-      document.getElementById("species-sub").textContent = "Most common first" +
-        (unknown ? ` · ${fmt(unknown)} finds not identified to ${L.name}` : "") +
-        // Group-only IDs that reach this level: genus needs one that names a genus, family takes "Sparrow sp."
-        { species: "", genus: " · includes IDs like “Unidentified Empidonax”", family: " · includes IDs like “Sparrow sp.”" }[level];
-      renderIdShare(agg.total - unknown, unknown, agg.total);
+      const shown = currentRows.filter(inAnimal);
+      const total = shown.length;
+      const all = groupFinds(shown);
+      const unknown = total - d3.sum(all, d => d.n);
+      document.getElementById("species-sub").textContent =
+        unknown ? `${fmt(unknown)} records not identified to ${L.name}` : `All records identified to ${L.name}`;
+      renderIdShare(total - unknown, unknown, total);
       const rows = showAllSpecies ? all : all.slice(0, SPECIES_PREVIEW);
       const W = Math.max(300, el.clientWidth), rowH = 22;
       const labelW = level === "family" ? Math.min(290, W * 0.5) : Math.min(200, W * 0.42);
       const m = { t: 4, r: 40, b: 4, l: labelW };
       const H = m.t + m.b + rows.length * rowH;
-      const x = d3.scaleLinear().domain([0, d3.max(rows, d => d.n) || 1]).range([m.l, W - m.r]);
+      // Scaled to the largest group, shown or not, so "least common first" doesn't stretch 1-find bars full width
+      const x = d3.scaleLinear().domain([0, d3.max(all, d => d.n) || 1]).range([m.l, W - m.r]);
       const y = d3.scaleBand().domain(rows.map(d => d.key + "|" + d.animal)).range([m.t, H - m.b]).paddingInner(0.25);
 
       const svg = d3.select(el).html("").append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("width", "100%")
-        .attr("role", "img").attr("aria-label", `Bar chart of finds by ${L.name}`);
+        .attr("role", "img").attr("aria-label", `Bar chart of records by ${L.name}`);
       const g = svg.append("g");
       const row = g.selectAll("g").data(rows).join("g").attr("transform", d => `translate(0,${y(d.key + "|" + d.animal)})`);
       const bh = y.bandwidth();
@@ -1081,10 +1263,10 @@
       row.append("text").attr("class", "val").attr("x", d => x(d.n) + 6).attr("y", bh / 2).attr("dy", "0.35em").text(d => fmt(d.n));
       row.append("rect").attr("x", 0).attr("y", -y.step() * y.paddingInner() / 2).attr("width", W).attr("height", y.step())
         .attr("fill", "transparent").attr("class", "clickable")
-        .attr("tabindex", 0).attr("role", "button").attr("aria-label", d => `${L.label(d)}: ${d.n} finds. Show reports`)
+        .attr("tabindex", 0).attr("role", "button").attr("aria-label", d => `${L.label(d)}: ${d.n} records. Show reports`)
         .on("mousemove", (ev, d) => {
           g.classed("dim", true).selectAll(".mark").classed("on", b => b === d);
-          showTip(ev, tipFor(d, agg));
+          showTip(ev, tipFor(d, total));
         })
         .on("mouseleave", () => { g.classed("dim", false); hideTip(); })
         .on("click", (ev, d) => { hideTip(); openGroup(d); })
@@ -1092,7 +1274,8 @@
 
       const btn = document.getElementById("more");
       btn.hidden = all.length <= SPECIES_PREVIEW;
-      btn.textContent = showAllSpecies ? `Show top ${SPECIES_PREVIEW}` : `Show all ${all.length} ${L.plural}`;
+      btn.textContent = showAllSpecies ? `Show ${SPECIES_PREVIEW} ${sortOrder === "asc" ? "least" : "most"} common`
+        : `Show all ${all.length} ${L.plural}`;
 
       const cols = {
         species: [{ label: "Species", get: d => d.key }],
@@ -1100,7 +1283,7 @@
         family: [{ label: "Common name", get: d => d.common }, { label: "Family", get: d => d.key }],
       }[level];
       table(document.getElementById("tbl-species"),
-        [...cols, { label: "Animal", get: d => d.animal }, { label: "Finds", num: true, get: d => fmt(d.n) }], all);
+        [...cols, { label: "Animal", get: d => d.animal }, { label: "Records", num: true, get: d => fmt(d.n) }], all);
     }
 
     // ---- species / genus / family tabs ----
@@ -1126,6 +1309,28 @@
       });
     });
 
+    // ---- all animals / birds / bats filter for the same chart ----
+    const animalBtns = [...document.querySelectorAll('.tabs [role="radio"]')];
+    function selectAnimal(btn) {
+      animalBtns.forEach(b => {
+        const on = b === btn;
+        b.setAttribute("aria-checked", on);
+        b.tabIndex = on ? 0 : -1;
+      });
+      animal = btn.dataset.animal;
+      showAllSpecies = false;
+      if (finds.length) render();
+    }
+    animalBtns.forEach((b, i) => {
+      b.addEventListener("click", () => selectAnimal(b));
+      b.addEventListener("keydown", ev => {
+        const step = { ArrowRight: 1, ArrowLeft: -1 }[ev.key];
+        if (!step) return;
+        const next = animalBtns[(i + step + animalBtns.length) % animalBtns.length];
+        next.focus(); selectAnimal(next);
+      });
+    });
+
     function renderSources(agg) {
       const share = d => agg.total ? pct(d.n / agg.total) : "–";
       const bar = document.getElementById("src-bar");
@@ -1133,7 +1338,7 @@
         `<span style="flex:${d.n};background:${d.color}"></span>`).join("");
       const sourceRows = d => currentRows.filter(r => (r.source || "CUSRT") === d.key);
       d3.select(bar).selectAll("span").data(agg.bySource.filter(d => d.n > 0))
-        .on("mousemove", (ev, d) => showTip(ev, `<b>${d.label}</b><br>${fmt(d.n)} finds · ${share(d)}<br>Click to see reports`))
+        .on("mousemove", (ev, d) => showTip(ev, `<b>${d.label}</b><br>${fmt(d.n)} records · ${share(d)}<br>Click to see reports`))
         .on("mouseleave", hideTip)
         .call(clickable, sourceRows, d => d.label, { sourceInTitle: true });
       // A category with no finds in any year gets no tile
@@ -1173,7 +1378,7 @@
       h.textContent = title;
       h.style.fontStyle = italic ? "italic" : "";
       document.getElementById("reports-sub").textContent =
-        `${fmt(rows.length)} ${rows.length === 1 ? "find" : "finds"} in ${fmt(reports.length)} ` +
+        `${fmt(rows.length)} ${rows.length === 1 ? "record" : "records"} in ${fmt(reports.length)} ` +
         `${reports.length === 1 ? "report" : "reports"} · ${year === "all" ? "all years" : year}`;
       dialog.querySelector(".body").scrollTop = 0;
       dialog.showModal();
@@ -1200,6 +1405,7 @@
     // ---- boot ----
     document.getElementById("year").addEventListener("change", e => { year = e.target.value; render(); });
     document.getElementById("more").addEventListener("click", () => { showAllSpecies = !showAllSpecies; render(); });
+    document.getElementById("sort").addEventListener("change", e => { sortOrder = e.target.value; render(); });
     let resizeTimer, lastWidth = 0;
     new ResizeObserver(([entry]) => {
       const w = Math.round(entry.contentRect.width);

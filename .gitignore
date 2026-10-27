@@ -1,4 +1,4 @@
-# Raw sheet exports contain names, emails and GPS; only data/collisions.json is published
+# Old CUSRT sheet exports (no longer used) contain names, emails and GPS; never commit one
 *Responses*.csv
 # Source for data/alpha_codes.csv; regenerate with scripts/make_alpha_codes.py
 data/Alpha_codes_eng.pdf

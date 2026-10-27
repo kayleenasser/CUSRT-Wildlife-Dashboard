@@ -14622,6 +14622,17 @@
 },
 {
 "date": "2026-08-27",
+"animal": "Bat",
+"status": "Alive",
+"species": "Eastern Red Bat",
+"genus": "Lasiurus",
+"family": "Vespertilionidae",
+"family_common": "Vesper Bats",
+"source": "CUSRT",
+"report": 1184225
+},
+{
+"date": "2026-08-27",
 "animal": "Bird",
 "status": "Deceased",
 "species": "Unknown",

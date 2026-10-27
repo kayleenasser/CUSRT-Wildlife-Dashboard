@@ -36,6 +36,7 @@ def sheet_rows(path):
 def main():
     xlsx = sys.argv[1] if len(sys.argv) > 1 else "master_ioc_list_v15.2.xlsx"
     rows = sheet_rows(xlsx)
+    title, citation = next(rows).get("C", ""), next(rows).get("C", "")  # "IOC WORLD BIRD LIST (15.2) ...", "Gill, F, ..."
     header = next(r for r in rows if r.get("D") == "Family (Scientific)")
     col = {name: letter for letter, name in header.items()}
     family = family_en = None
@@ -47,6 +48,10 @@ def main():
         elif r.get(col["Genus"]):
             genera[r[col["Genus"]]] = (family, family_en)
     with OUT.open("w", newline="", encoding="utf-8") as f:
+        version = re.search(r"\((\d+\.\d+)\)", title)
+        f.write(f"# Genus -> family from the IOC World Bird List{f' v{version[1]}' if version else ''}: "
+                "https://www.worldbirdnames.org/new/classification/family-index-2/\n")
+        f.write(f"# Credit: {citation} Lines starting with # are notes.\n")
         w = csv.writer(f)
         w.writerow(["genus", "family", "family_english"])
         w.writerows([g, *fam] for g, fam in sorted(genera.items()))

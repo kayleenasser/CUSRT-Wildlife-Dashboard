@@ -29,6 +29,9 @@ def main():
         if m and m[2] not in codes:
             codes[m[2]] = (m[1].replace("’", "'"), m[3])
     with OUT.open("w", newline="", encoding="utf-8") as f:
+        f.write("# Four-letter (English name) and six-letter (scientific name) alpha codes, in accordance with the 66th AOS\n"
+                "# Supplement (2025). Prepared by Peter Pyle and David F. DeSante, The Institute for Bird Populations:\n"
+                "# https://www.birdpop.org/pages/birdSpeciesCodes.php  Lines starting with # are notes.\n")
         w = csv.writer(f)
         w.writerow(["code", "english_name", "scientific_name"])
         w.writerows([code, *names] for code, names in sorted(codes.items()))
