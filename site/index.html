@@ -28,9 +28,9 @@
       --live-bird: #49bde1;
       --deceased-bat: #650f0f;
       --live-bat: #b1714e;
-      /* Species chart bar colours */
-      --species-bird: var(--teal-dark);
-      --species-bat: #7daab9;
+      /* Species chart bars: records before the mid-year split (SPLIT_DAY), and from it to the end of the year */
+      --before-split: var(--teal-dark);
+      --after-split: #3d8aa6;
       /* Identified vs. not identified donut on the species chart */
       --id-known: var(--teal);
       --id-unknown: #cdd3cc;
@@ -152,9 +152,8 @@
       justify-content: space-between;
       margin-top: 22px;
       padding: 14px 20px;
-      background: var(--teal-dark);
+      background: #044d66;
       color: #fff;
-      border-radius: 8px;
     }
 
     .headline {
@@ -514,11 +513,24 @@
       display: contents;
     }
 
+    /* Animal filter at the left, species / genus / family in the middle, sort at the right */
+    .chart-controls [role="radiogroup"] {
+      justify-self: start;
+    }
+
+    .chart-controls .sort {
+      justify-self: end;
+    }
+
     @media (max-width: 760px) {
       .chart-controls {
         grid-template-columns: minmax(0, 1fr);
-        justify-items: start;
         row-gap: 16px;  /* room between the stacked controls so a tap doesn't land on the wrong row */
+      }
+
+      .chart-controls .tabs,
+      .chart-controls .sort {
+        justify-self: start;
       }
     }
 
@@ -755,6 +767,28 @@
       margin: 10px 0 0;
     }
 
+    /* Clickable column headings in the report pop-up; the sorted one is teal */
+    #reports .sort-col {
+      font: inherit;
+      font-weight: 500;
+      color: var(--teal);
+      background: none;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #reports .sort-col:hover {
+      text-decoration: underline;
+    }
+
+    #reports .sort-col:focus-visible {
+      outline: 2px solid var(--teal);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
     svg .clickable,
     .clickable {
       cursor: pointer;
@@ -873,8 +907,8 @@
             </div>
           </div>
           <div class="key">
-            <span><i class="sw" style="background:var(--species-bird)"></i>Bird</span>
-            <span><i class="sw" style="background:var(--species-bat)"></i>Bat</span>
+            <span><i class="sw" style="background:var(--before-split)"></i>Before Jul 15</span>
+            <span><i class="sw" style="background:var(--after-split)"></i>Jul 15 onward</span>
           </div>
         </header>
         <div class="chart-controls">
@@ -1006,7 +1040,11 @@
       { key: "Bats- Deceased", animal: "Bat", status: "Deceased", color: "var(--deceased-bat)" },
       { key: "Bats- Live", animal: "Bat", status: "Alive", color: "var(--live-bat)" },
     ];
-    const ANIMAL_COLOR = { Bird: "var(--species-bird)", Bat: "var(--species-bat)" };
+    // Species chart bars are split at this day of the year: before it, and from it (inclusive) to Dec 31.
+    // Change the labels in the chart's key in the HTML too.
+    const SPLIT_DAY = "07-15";
+    const SPLIT_LABELS = { before: "Before Jul 15", after: "Jul 15 onward" };
+    const beforeSplit = r => r.date.slice(5) < SPLIT_DAY;
     const SOURCES = [
       { key: "CUSRT", label: "Reported by CUSRT volunteers", color: "var(--src-cusrt)" },
       { key: "Public", label: "Reported by the public", color: "var(--src-public)" },
@@ -1021,6 +1059,7 @@
     let animal = "all";  // species chart filter: "all", "Bird" or "Bat"
     const inAnimal = r => animal === "all" || r.animal === animal;
     let sortOrder = "desc";  // species chart: "desc" = most common first, "asc" = least common first
+    let reportSort = { col: "date", dir: "asc" };  // report pop-ups: sorted column and direction (oldest first)
 
     const fmt = d3.format(",");
     const pct = n => (n * 100).toFixed(n > 0 && n < 0.01 ? 1 : 0) + "%";
@@ -1065,7 +1104,7 @@
       const L = LEVELS[level];
       return d3.rollups(rows.filter(L.key), v => v, L.key, r => r.animal)
         .flatMap(([key, animals]) => animals.map(([animal, v]) => ({
-          key, animal, n: v.length, family: v[0].family, common: v[0].family_common,
+          key, animal, n: v.length, before: v.filter(beforeSplit).length, family: v[0].family, common: v[0].family_common,
           species: d3.rollups(v.filter(r => !isUnknown(r.species)), s => s.length, r => r.species)
             .sort((a, b) => d3.descending(a[1], b[1])).map(([s]) => s),
         })))
@@ -1189,7 +1228,8 @@
       const family = level === "genus" && d.family ? `<br>${esc(d.common)} (${esc(d.family)})` : level === "family" ? `<br>${esc(d.key)}` : "";
       const more = d.species.length > 3 ? `, +${d.species.length - 3} more` : "";
       const species = level !== "species" && d.species.length ? `<br>${d.species.slice(0, 3).map(esc).join(", ")}${more}` : "";
-      return `<b>${name}</b>${family}<br>${d.animal} · ${fmt(d.n)} records · ${pct(d.n / total)} of all${species}<br>Click to see reports`;
+      const split = `<br>${SPLIT_LABELS.before}: ${fmt(d.before)} · ${SPLIT_LABELS.after}: ${fmt(d.n - d.before)}`;
+      return `<b>${name}</b>${family}<br>${d.animal} · ${fmt(d.n)} records · ${pct(d.n / total)} of all${split}${species}<br>Click to see reports`;
     }
 
     // Small donut under the species chart's subtitle: how many finds could be named at the current tab's level
@@ -1258,8 +1298,12 @@
           while (this.getComputedTextLength() > labelW - 12 && s.length > 4) { s = s.slice(0, -1); t.text(s + "…"); }
           if (s !== full) t.append("title").text(full);
         });
-      row.append("path").attr("class", "mark").attr("d", d => barH(m.l, 0, Math.max(1, x(d.n) - m.l), bh))
-        .attr("fill", d => ANIMAL_COLOR[d.animal]);
+      // Each bar in two parts: records before SPLIT_DAY (square end, unless it's the whole bar), then the rest
+      row.filter(d => d.before > 0).append("path").attr("class", "mark").attr("fill", "var(--before-split)")
+        .attr("d", d => d.before === d.n ? barH(m.l, 0, Math.max(1, x(d.n) - m.l), bh)
+          : `M${m.l},0H${x(d.before)}V${bh}H${m.l}Z`);
+      row.filter(d => d.n > d.before).append("path").attr("class", "mark").attr("fill", "var(--after-split)")
+        .attr("d", d => barH(x(d.before), 0, Math.max(1, x(d.n) - x(d.before)), bh));
       row.append("text").attr("class", "val").attr("x", d => x(d.n) + 6).attr("y", bh / 2).attr("dy", "0.35em").text(d => fmt(d.n));
       row.append("rect").attr("x", 0).attr("y", -y.step() * y.paddingInner() / 2).attr("width", W).attr("height", y.step())
         .attr("fill", "transparent").attr("class", "clickable")
@@ -1283,7 +1327,10 @@
         family: [{ label: "Common name", get: d => d.common }, { label: "Family", get: d => d.key }],
       }[level];
       table(document.getElementById("tbl-species"),
-        [...cols, { label: "Animal", get: d => d.animal }, { label: "Records", num: true, get: d => fmt(d.n) }], all);
+        [...cols, { label: "Animal", get: d => d.animal },
+          { label: SPLIT_LABELS.before, num: true, get: d => fmt(d.before) },
+          { label: SPLIT_LABELS.after, num: true, get: d => fmt(d.n - d.before) },
+          { label: "Records", num: true, get: d => fmt(d.n) }], all);
     }
 
     // ---- species / genus / family tabs ----
@@ -1362,18 +1409,41 @@
         const outcome = [deceased && (deceased > 1 ? `${deceased} deceased` : "Deceased"),
         alive && (alive > 1 ? `${alive} alive` : "Alive")].filter(Boolean).join(", ");
         return { ...rs[0], outcome };
-      }).sort((a, b) => d3.ascending(a.date, b.date));  // oldest first
+      });
       const mixed = new Set(rows.map(r => r.species)).size > 1;
       const reportedBy = r => r.organization ?? ({ CUSRT: "CUSRT volunteers" })[r.source] ?? "Public";
       const showSource = !sourceInTitle || new Set(reports.map(reportedBy)).size > 1;
 
       const longDate = s => new Date(s + "T12:00:00").toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" });
-      table(document.getElementById("reports-table"),
-        [{ label: "Date", get: r => longDate(r.date) },
-        ...(mixed ? [{ label: "Species", get: r => isUnknown(r.species) ? "Not identified" : r.species }] : []),
-        { label: "Outcome", get: r => r.outcome },
-        ...(showSource ? [{ label: "Reported by", get: reportedBy }] : []),
-        { label: "Report #", num: true, get: r => r.report ?? "–" }], reports);
+      // Every column heading is a button that sorts by that column (dates by date, Report # by number, the rest
+      // alphabetically); clicking the sorted column again reverses it. The choice is remembered between pop-ups.
+      const cols = [
+        { id: "date", label: "Date", get: r => longDate(r.date), sortBy: r => r.date },
+        ...(mixed ? [{ id: "species", label: "Species", get: r => isUnknown(r.species) ? "Not identified" : r.species }] : []),
+        // "11 deceased, 4 alive" sorts with "Deceased", not ahead of "Alive"
+        { id: "outcome", label: "Outcome", get: r => r.outcome, sortBy: r => r.outcome.replace(/^\d+ /, "").toLowerCase() },
+        ...(showSource ? [{ id: "source", label: "Reported by", get: reportedBy }] : []),
+        { id: "report", label: "Report #", num: true, get: r => r.report ?? "–", sortBy: r => r.report ?? Infinity },
+      ];
+      const draw = () => {
+        const col = cols.find(c => c.id === reportSort.col) ?? cols[0];
+        const key = col.sortBy ?? (r => String(col.get(r)).toLowerCase());
+        const dir = reportSort.dir === "asc" ? d3.ascending : d3.descending;
+        reports.sort((a, b) => dir(key(a), key(b)) || d3.ascending(a.date, b.date));
+        const words = { date: ["oldest", "newest"], report: ["lowest", "highest"] }[col.id] ?? ["A to Z", "Z to A"];
+        table(document.getElementById("reports-table"), cols.map(c => {
+          const on = c === col, arrow = on ? (reportSort.dir === "asc" ? " ▲" : " ▼") : "";
+          const state = on ? `, sorted ${reportSort.dir === "asc" ? words[0] : words[1]}${c.id === "date" || c.id === "report" ? " first" : ""}` : "";
+          return { ...c, label: `<button class="sort-col${on ? " on" : ""}" data-col="${c.id}" aria-label="Sort by ${c.label}${state}">${c.label}${arrow}</button>` };
+        }), reports);
+        document.querySelectorAll("#reports-table .sort-col").forEach(btn => btn.addEventListener("click", () => {
+          const id = btn.dataset.col;
+          reportSort = { col: id, dir: reportSort.col === id && reportSort.dir === "asc" ? "desc" : "asc" };
+          draw();
+          document.querySelector(`#reports-table .sort-col[data-col="${id}"]`).focus();
+        }));
+      };
+      draw();
       const h = document.getElementById("reports-title");
       h.textContent = title;
       h.style.fontStyle = italic ? "italic" : "";

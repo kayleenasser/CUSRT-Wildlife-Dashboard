@@ -72,9 +72,10 @@ Styled to match calgaryurbanspecies.ca: deep teal (`#035772`) banner, off-white 
 (`#e0fd2c`) highlights, pill buttons. Light mode only, like the main site.
 
 The four category colours (`--deceased-bird`, `--live-bird`, `--deceased-bat`, `--live-bat`) are set once at the
-top of the `<style>` block in `site/index.html`, next to `--species-bird` / `--species-bat` for the species
-chart bars (dark and light teal). The month chart uses the site teal. Every chart has a "Show as table" view.
-The species chart has Species / Genus / Family tabs (`LEVELS` in `site/index.html`).
+top of the `<style>` block in `site/index.html`, next to `--before-split` / `--after-split` for the species
+chart bars (light and dark teal). The month chart uses the site teal. Every chart has a "Show as table" view.
+The species chart has All animals / Birds / Bats and Species / Genus / Family tabs (`LEVELS` in `site/index.html`),
+and each bar is split into records before July 15 and from July 15 on (`SPLIT_DAY` in `site/index.html`).
 
 ## Credits
 The reference lists in `data/` each credit their source on their first lines:
