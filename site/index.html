@@ -150,7 +150,8 @@
       align-items: flex-start;
       gap: 12px;
       margin-top: 22px;
-      padding: 14px 0;  /* no side padding, so the summary lines up with the description above */
+      padding: 14px 0;
+      /* no side padding, so the summary lines up with the description above */
       color: #fff;
     }
 
@@ -234,6 +235,149 @@
 
     #months svg {
       display: block;
+    }
+
+    /* Survey area: full-width text, then small map previews with the screenshot note beside them */
+    .survey p {
+      margin: 0 0 6px;
+      font-size: .88rem;
+      color: var(--ink-2);
+    }
+
+    .survey strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    /* Data caveat callout: light teal panel with a teal edge, so it stands out from the body text */
+    .caveat {
+      margin: 10px 0 0;
+      padding: 8px 14px;
+      background: #eaf2f4;
+      border-left: 4px solid var(--teal);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .caveat p {
+      color: var(--ink);
+      margin: 0;
+    }
+
+    /* Screenshots, then the Explore the map panel as a third column at the same height */
+    .maps-row {
+      display: grid;
+      grid-template-columns: minmax(0, 680px) minmax(220px, 1fr);
+      gap: 16px 24px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 760px) {
+      .maps-row {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .maps-row .footnote {
+      margin: 10px 0 0;
+    }
+
+    .explore {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 0;
+    }
+
+    /* Logo on top, heading under it */
+    .explore-head {
+      display: flex;
+      flex-direction: column;
+      align-items: inherit;
+      gap: 8px;
+    }
+
+    .explore-head .cta-logo {
+      height: 64px;
+      max-width: 100%;
+    }
+
+    .explore p {
+      margin: 0;
+    }
+
+    .explore .cta-btn {
+      background: var(--teal);
+      color: #fff;
+      margin-top: 6px;
+      padding: 14px 34px;
+      font-size: 1.05rem;
+    }
+
+    .explore .cta-btn:hover {
+      background: var(--teal-dark);
+    }
+
+    .explore .cta-btn:focus-visible {
+      outline-color: var(--teal);
+    }
+
+    .maps {
+      display: grid;
+      /* Columns in proportion to each screenshot's aspect ratio, so both show uncropped at the same height */
+      grid-template-columns: minmax(0, 0.844fr) minmax(0, 1.484fr);
+      gap: 12px;
+      width: min(100%, 680px);
+    }
+
+    .maps figure {
+      margin: 0;
+    }
+
+    .maps a {
+      display: block;
+      position: relative;
+    }
+
+    /* "Click to zoom" label over a screenshot on hover or keyboard focus */
+    .maps a::after {
+      content: "Click to zoom";
+      position: absolute;
+      left: 50%;
+      bottom: 10px;
+      transform: translateX(-50%);
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(3, 68, 89, .85);
+      color: #fff;
+      font-size: .75rem;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity .15s;
+      pointer-events: none;
+    }
+
+    .maps a:hover::after,
+    .maps a:focus-visible::after {
+      opacity: 1;
+    }
+
+    .maps img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+    }
+
+    .maps figcaption {
+      margin-top: 4px;
+      font-size: .7rem;
+      line-height: 1.4;
+      color: var(--ink-3);
     }
 
     .card header {
@@ -415,20 +559,6 @@
       outline-color: var(--teal);
     }
 
-    /* Full-width closing card: text and button side by side, stacking on narrow screens */
-    .cta.wide {
-      grid-column: 1 / -1;
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
-      border-width: 1px;
-      border-color: var(--rule);
-    }
-
-    .cta.wide>div {
-      flex: 1 1 280px;
-    }
-
     .cta-logo-link {
       flex: none;
       line-height: 0;
@@ -523,7 +653,8 @@
     @media (max-width: 760px) {
       .chart-controls {
         grid-template-columns: minmax(0, 1fr);
-        row-gap: 16px;  /* room between the stacked controls so a tap doesn't land on the wrong row */
+        row-gap: 16px;
+        /* room between the stacked controls so a tap doesn't land on the wrong row */
       }
 
       .chart-controls .tabs,
@@ -752,7 +883,8 @@
     }
 
     #reports .learn[hidden] {
-      display: none;  /* only species pop-ups have a page to link to */
+      display: none;
+      /* only species pop-ups have a page to link to */
     }
 
     #reports .learn svg {
@@ -792,6 +924,89 @@
 
     #reports .close:focus-visible {
       outline: 2px solid var(--lime);
+    }
+
+    /* Enlarged map screenshot: same teal header as the reports pop-up, sized to the image */
+    #map-view {
+      border: 0;
+      border-radius: 10px;
+      padding: 0;
+      width: fit-content;
+      max-width: calc(100% - 32px);
+      max-height: 94vh;
+      color: var(--ink);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .25);
+      overflow: auto;
+    }
+
+    #map-view::backdrop {
+      background: rgba(3, 68, 89, .65);
+    }
+
+    /* width 0 + min-width 100%: the header wraps to the image's width instead of widening the pop-up */
+    #map-view header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      width: 0;
+      min-width: 100%;
+      background: var(--teal);
+      color: #fff;
+      padding: 14px 16px 14px 20px;
+    }
+
+    #map-view h2 {
+      color: #fff;
+    }
+
+    #map-view .sub {
+      color: #d5e2e6;
+    }
+
+    #map-view .close {
+      flex: none;
+      font: 600 1.4rem/1 Poppins, sans-serif;
+      color: #fff;
+      background: none;
+      border: 0;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    #map-view .close:focus-visible {
+      outline: 2px solid var(--lime);
+    }
+
+    /* Double-click or pinch to zoom, drag to move: the image moves inside this frame with a CSS transform */
+    #map-view .viewport {
+      overflow: hidden;
+      touch-action: none;
+      cursor: zoom-in;
+    }
+
+    #map-view .viewport.zoomed {
+      cursor: grab;
+    }
+
+    #map-view .viewport.dragging {
+      cursor: grabbing;
+    }
+
+    #map-view img {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: calc(100vw - 32px);
+      max-height: calc(94vh - 120px);
+      transform-origin: 0 0;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .maps a {
+      cursor: zoom-in;
     }
 
     #reports .body {
@@ -879,7 +1094,7 @@
       <h1>CUSRT Wildlife Dashboard</h1>
       <div class="intro">
         <p>Since 2019, the Calgary Urban Species Response Team (CUSRT) has documented birds and bats affected by the
-          architectural hazards of Calgary's downtown core.</p>
+          human-caused hazards of Calgary's downtown core.</p>
         <p>This dashboard summarizes these records from the
           <a href="https://www.birdmapper.org/" target="_blank" rel="noopener">Global Bird Collision Mapper®</a>,
           <a href="https://www.flap.org/" target="_blank" rel="noopener">FLAP Canada</a>'s international database. It
@@ -915,7 +1130,8 @@
           disorientation, or illness.</p>
         <p class="footnote">Live birds and bats who can be safely contained are taken to a
           <a href="https://www.calgaryurbanspecies.ca/find-a-wildlife-rehab" target="_blank" rel="noopener">wildlife
-            rehabilitation clinic</a> for appropriate diagnosis and treatment.</p>
+            rehabilitation clinic</a> for appropriate diagnosis and treatment.
+        </p>
         <details>
           <summary>Show as table</summary>
           <div class="tbl-wrap" id="tbl-category"></div>
@@ -999,6 +1215,61 @@
         <div class="src-bar" id="src-bar"></div>
         <div class="src-row" id="src-row"></div>
       </section>
+
+      <section class="card wide survey">
+        <header>
+          <div>
+            <h2>What these numbers don't show</h2>
+          </div>
+        </header>
+        <p>CUSRT surveys the downtown core, typically in the early morning (5:00–9:00 AM). The maps below show the
+          result: reports cluster downtown, with only a handful from the rest of the city. That does not mean birds are
+          safe elsewhere. Birds strike windows on homes, schools and businesses across Calgary at all hours of the day.
+          With no one out looking, the vast majority of that loss goes uncounted.</p>
+        <div class="caveat" role="note">
+          <p>The reality: these records represent <strong>only a fraction</strong> of the actual injury and <strong>loss</strong> in
+            Calgary.</p>
+        </div>
+        <div class="maps-row">
+          <div>
+            <div class="maps">
+              <figure data-title="All of Calgary">
+                <a href="../data/map_screenshots/Calgary-wide-Oct-30-2026.png" target="_blank" rel="noopener"><img
+                    src="../data/map_screenshots/Calgary-wide-Oct-30-2026.png" width="1017" height="1205"
+                    alt="Map of Calgary with one large cluster of 1,308 reports downtown and small clusters of 1 to 23 reports scattered across the rest of the city"></a>
+                <figcaption>All of Calgary: 1,308 reports downtown, only a few elsewhere.</figcaption>
+              </figure>
+              <figure data-title="Downtown core">
+                <a href="../data/map_screenshots/Calgary-core-zoomed-Oct-30-2026.png" target="_blank"
+                  rel="noopener"><img src="../data/map_screenshots/Calgary-core-zoomed-Oct-30-2026.png" width="1810"
+                    height="1220"
+                    alt="Zoomed-in map of downtown Calgary with dense clusters of reports along the downtown blocks between the Bow River and the rail tracks"></a>
+                <figcaption>Zoomed in on the downtown core, where our surveys take place.</figcaption>
+              </figure>
+            </div>
+            <p class="footnote">Static screenshots of the
+              <a href="https://www.birdmapper.org/pages/explore-the-map" target="_blank" rel="noopener">Global Bird
+                Collision
+                Mapper®</a>, taken October 30, 2026.
+            </p>
+          </div>
+          <div class="explore">
+            <div class="explore-head">
+              <a class="cta-logo-link" href="https://www.birdmapper.org/" target="_blank" rel="noopener"><img
+                  class="cta-logo" src="birdmapper-logo.png" alt="Global Bird Collision Mapper" width="181"
+                  height="56"></a>
+              <h2>Explore the map</h2>
+            </div>
+            <p>To see where window collisions are being reported across Calgary and in cities around the world,
+              explore the up-to-date map on
+              <a href="https://www.flap.org/" target="_blank" rel="noopener">FLAP Canada</a>'s
+              <a href="https://www.birdmapper.org/" target="_blank" rel="noopener">Global Bird Collision Mapper®</a>.
+            </p>
+            <a class="cta-btn" href="https://www.birdmapper.org/pages/explore-the-map" target="_blank"
+              rel="noopener">Explore the map</a>
+          </div>
+        </div>
+      </section>
     </div>
 
     <div class="cta-row">
@@ -1026,28 +1297,14 @@
         <a class="cta-btn" href="https://www.calgaryurbanspecies.ca/general-8" target="_blank" rel="noopener">Apply to
           volunteer</a>
       </section>
-
-      <section class="cta alt wide">
-        <a class="cta-logo-link" href="https://www.birdmapper.org/" target="_blank" rel="noopener"><img class="cta-logo"
-            src="birdmapper-logo.png" alt="Global Bird Collision Mapper" width="181" height="56"></a>
-        <div>
-          <h2>Explore the map</h2>
-          <p>To learn more about where window collisions are happening, visit
-            <a href="https://www.flap.org/" target="_blank" rel="noopener">FLAP Canada</a>'s
-            <a href="https://www.birdmapper.org/" target="_blank" rel="noopener">Global Bird Collision Mapper®</a>.
-          </p>
-        </div>
-        <a class="cta-btn" href="https://www.birdmapper.org/pages/explore-the-map" target="_blank"
-          rel="noopener">Explore
-          the map</a>
-      </section>
     </div>
   </main>
 
   <footer>
     <div class="wrap">Data includes every report in the Calgary area on the
       <a href="https://www.birdmapper.org/" target="_blank" rel="noopener">Global Bird Collision Mapper®</a>. Data
-      updated every 6 hours.
+      updated every 6 hours. This is a <strong>live community science snapshot</strong>. The data is not fully audited
+      and is subject to change.
     </div>
   </footer>
   <div id="tip" hidden></div>
@@ -1056,10 +1313,12 @@
       <div>
         <div class="title-row">
           <h2 id="reports-title"></h2>
-          <a class="learn" id="reports-learn" target="_blank" rel="noopener" hidden><svg viewBox="0 0 16 16"
-              width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor"
-                stroke-width="1.5" /><path d="M8 7v4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-              <circle cx="8" cy="4.6" r="1" fill="currentColor" /></svg><span></span></a>
+          <a class="learn" id="reports-learn" target="_blank" rel="noopener" hidden><svg viewBox="0 0 16 16" width="15"
+              height="15" aria-hidden="true">
+              <circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5" />
+              <path d="M8 7v4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+              <circle cx="8" cy="4.6" r="1" fill="currentColor" />
+            </svg><span></span></a>
         </div>
         <p class="sub" id="reports-sub"></p>
       </div>
@@ -1070,6 +1329,18 @@
       <p class="note">Report # is the BirdMapper record number. Full report details are available on the
         <a href="https://www.birdmapper.org/" target="_blank" rel="noopener">Global Bird Collision Mapper®</a>.
       </p>
+    </div>
+  </dialog>
+  <dialog id="map-view" aria-labelledby="map-view-title">
+    <header>
+      <div>
+        <h2 id="map-view-title"></h2>
+        <p class="sub" id="map-view-sub"></p>
+      </div>
+      <button class="close" id="map-view-close" aria-label="Close" autofocus>&times;</button>
+    </header>
+    <div class="viewport" id="map-view-port">
+      <img id="map-view-img" alt="" draggable="false">
     </div>
   </dialog>
 
@@ -1374,9 +1645,9 @@
       }[level];
       table(document.getElementById("tbl-species"),
         [...cols, { label: "Animal", get: d => d.animal },
-          { label: SPLIT_LABELS.before, num: true, get: d => fmt(d.before) },
-          { label: SPLIT_LABELS.after, num: true, get: d => fmt(d.n - d.before) },
-          { label: "Records", num: true, get: d => fmt(d.n) }], all);
+        { label: SPLIT_LABELS.before, num: true, get: d => fmt(d.before) },
+        { label: SPLIT_LABELS.after, num: true, get: d => fmt(d.n - d.before) },
+        { label: "Records", num: true, get: d => fmt(d.n) }], all);
     }
 
     // ---- species / genus / family tabs ----
@@ -1446,6 +1717,81 @@
     const dialog = document.getElementById("reports");
     document.getElementById("reports-close").addEventListener("click", () => dialog.close());
     dialog.addEventListener("click", ev => { if (ev.target === dialog) dialog.close(); });  // click on backdrop
+
+    // ---- pop-up: an enlarged survey-area map screenshot, with its caption ----
+    const mapView = document.getElementById("map-view");
+    document.getElementById("map-view-close").addEventListener("click", () => mapView.close());
+    mapView.addEventListener("click", ev => { if (ev.target === mapView) mapView.close(); });
+    document.querySelectorAll(".maps figure").forEach(fig => {
+      fig.querySelector("a").addEventListener("click", ev => {
+        ev.preventDefault();  // the link is only the fallback for when the pop-up can't open
+        const img = fig.querySelector("img"), big = document.getElementById("map-view-img");
+        big.src = img.src;
+        big.alt = img.alt;
+        document.getElementById("map-view-title").textContent = fig.dataset.title;
+        document.getElementById("map-view-sub").textContent =
+          fig.querySelector("figcaption").textContent.replace(/\s+/g, " ").trim() +
+          " Static screenshot taken October 30, 2026.";
+        resetZoom();
+        mapView.showModal();
+      });
+    });
+
+    // Zoom and pan, with no on-screen controls so the screenshot doesn't look like a live map.
+    // Scale s and offset (x, y) in px from the frame's top-left; s = 1 is the whole image.
+    const port = document.getElementById("map-view-port"), bigImg = document.getElementById("map-view-img");
+    const MAX_ZOOM = 5;
+    let view = { s: 1, x: 0, y: 0 };
+    function applyZoom() {
+      const w = port.clientWidth, h = port.clientHeight;
+      view.s = Math.min(MAX_ZOOM, Math.max(1, view.s));
+      view.x = Math.min(0, Math.max(w - w * view.s, view.x));  // keep the image covering the frame
+      view.y = Math.min(0, Math.max(h - h * view.s, view.y));
+      bigImg.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.s})`;
+      port.classList.toggle("zoomed", view.s > 1);
+    }
+    function resetZoom() { view = { s: 1, x: 0, y: 0 }; applyZoom(); }
+    // Zoom by factor k, keeping the point (px, py) of the frame fixed under the cursor / fingers
+    function zoomAt(k, px, py) {
+      const s = Math.min(MAX_ZOOM, Math.max(1, view.s * k));
+      k = s / view.s;
+      view = { s, x: px - (px - view.x) * k, y: py - (py - view.y) * k };
+      applyZoom();
+    }
+    const local = ev => { const r = port.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
+    port.addEventListener("dblclick", ev => view.s > 1 ? resetZoom() : zoomAt(2.5, ...local(ev)));
+
+    // One pointer drags the zoomed image; two (a pinch) zoom around their midpoint
+    const pointers = new Map();
+    let pinch = null;
+    port.addEventListener("pointerdown", ev => {
+      port.setPointerCapture(ev.pointerId);
+      pointers.set(ev.pointerId, local(ev));
+      if (view.s > 1) port.classList.add("dragging");
+    });
+    port.addEventListener("pointermove", ev => {
+      if (!pointers.has(ev.pointerId)) return;
+      const [px, py] = local(ev), [ox, oy] = pointers.get(ev.pointerId);
+      pointers.set(ev.pointerId, [px, py]);
+      if (pointers.size === 1) {
+        view.x += px - ox;
+        view.y += py - oy;
+        applyZoom();
+      } else if (pointers.size === 2) {
+        const [[ax, ay], [bx, by]] = [...pointers.values()];
+        const dist = Math.hypot(ax - bx, ay - by);
+        if (pinch) zoomAt(dist / pinch, (ax + bx) / 2, (ay + by) / 2);
+        pinch = dist;
+      }
+    });
+    const lift = ev => {
+      pointers.delete(ev.pointerId);
+      pinch = null;
+      if (!pointers.size) port.classList.remove("dragging");
+    };
+    port.addEventListener("pointerup", lift);
+    port.addEventListener("pointercancel", lift);
+    window.addEventListener("resize", () => { if (mapView.open) applyZoom(); });
 
     // A report with several animals becomes several finds; it's shown once with its counts.
     // sourceInTitle: opened from "Who reported", so the Reported by column only shows if it differs between reports.
