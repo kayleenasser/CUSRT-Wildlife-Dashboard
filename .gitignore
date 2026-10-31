@@ -1,5 +1,5 @@
-# Raw layer dumps from scripts/explore_birdmapper.py include usernames, notes and GPS
-birdmapper_explore/
+gitsscripts/get_report.py
+photos
 
 __pycache__/
 
