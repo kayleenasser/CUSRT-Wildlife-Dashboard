@@ -9,1075 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    /* Matches calgaryurbanspecies.ca: deep teal blocks, off-white page, Poppins, pill buttons. Light only, like the site. */
-    :root {
-      color-scheme: light;
-      --teal: #035772;
-      --teal-dark: #034459;
-      --lime: #e0fd2c;
-      --surface: #f6f9f5;
-      --card: #ffffff;
-      --rule: #dfe2dd;
-      --grid: #ebeeea;
-      --ink: #091405;
-      --ink-2: #4a4c4a;
-      --ink-3: #7a7c79;
-      /* Category colours: the only place to change them (used by every chart) */
-      --deceased-bird: #b81111;
-      --live-bird: #49bde1;
-      --deceased-bat: #650f0f;
-      --live-bat: #b1714e;
-      /* Species chart bars: records before the mid-year split (SPLIT_DAY), and from it to the end of the year */
-      --before-split: var(--teal-dark);
-      --after-split: #3d8aa6;
-      /* Identified vs. not identified donut on the species chart */
-      --id-known: var(--teal);
-      --id-unknown: #cdd3cc;
-      /* Who-reported bar colours */
-      --src-cusrt: var(--teal);
-      --src-public: #7daab9;
-      --src-wildlife: #63b2c4;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      background: var(--surface);
-      color: var(--ink);
-      font: 300 15px/1.6 Poppins, "Segoe UI", Helvetica, Arial, sans-serif;
-    }
-
-    a {
-      color: inherit;
-    }
-
-    .wrap {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding-inline: 20px;
-    }
-
-    h1,
-    h2 {
-      font-weight: 700;
-      margin: 0;
-      letter-spacing: -0.01em;
-    }
-
-    h1 {
-      font-size: clamp(1.7rem, 4.5vw, 2.8rem);
-      line-height: 1.15;
-    }
-
-    h2 {
-      font-size: 1.15rem;
-      font-weight: 600;
-      color: var(--teal);
-    }
-
-    .topbar {
-      background: #fff;
-      border-bottom: 1px solid var(--rule);
-    }
-
-    .topbar .wrap {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 20px;
-      justify-content: space-between;
-      align-items: center;
-      padding-block: 12px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 600;
-      font-size: 1.1rem;
-      color: var(--teal);
-      text-decoration: none;
-    }
-
-    .brand img {
-      width: 56px;
-      height: 56px;
-      flex: none;
-    }
-
-    .back {
-      font-size: .85rem;
-      color: var(--ink-2);
-      text-decoration: none;
-    }
-
-    .back:hover {
-      color: var(--teal);
-      text-decoration: underline;
-    }
-
-    .hero {
-      background: var(--teal);
-      color: #fff;
-    }
-
-    .hero .wrap {
-      padding-block: 34px 28px;
-    }
-
-    .intro {
-      margin-top: 12px;
-      color: #d5e2e6;
-      font-size: .88rem;
-    }
-
-    .intro p {
-      margin: 0 0 8px;
-    }
-
-    .intro p:last-child {
-      margin-bottom: 0;
-    }
-
-    /* Summary line, then the year filter under it, both lined up with the description */
-    .summary {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 12px;
-      margin-top: 22px;
-      padding: 14px 0;
-      /* no side padding, so the summary lines up with the description above */
-      color: #fff;
-    }
-
-    .headline {
-      font-size: 1.05rem;
-      margin: 0;
-      color: #e6eef0;
-    }
-
-    .headline strong {
-      color: var(--lime);
-      font-weight: 600;
-    }
-
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .filters label {
-      font-weight: 500;
-      font-size: .9rem;
-    }
-
-    select {
-      font: 500 .9rem Poppins, "Segoe UI", sans-serif;
-      color: var(--teal);
-      background: #fff;
-      border: 0;
-      border-radius: 999px;
-      padding: 8px 18px;
-      min-height: 40px;
-      cursor: pointer;
-    }
-
-    select:focus-visible {
-      outline: 3px solid var(--lime);
-      outline-offset: 2px;
-    }
-
-    main.wrap {
-      padding-block: 28px 56px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 20px;
-    }
-
-    @media (max-width: 760px) {
-      .grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--rule);
-      border-radius: 8px;
-      padding: 20px 20px 16px;
-      min-width: 0;
-    }
-
-    .card.wide {
-      grid-column: 1 / -1;
-    }
-
-    /* The chart area takes whatever height the card has left; renderMonths sizes the chart to it */
-    .card.fill {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .card.fill #months {
-      flex: 1 1 auto;
-      min-height: 200px;
-    }
-
-    #months svg {
-      display: block;
-    }
-
-    /* Survey area: full-width text, then small map previews with the screenshot note beside them */
-    .survey p {
-      margin: 0 0 6px;
-      font-size: .88rem;
-      color: var(--ink-2);
-    }
-
-    .survey strong {
-      color: var(--ink);
-      font-weight: 600;
-    }
-
-    /* Data caveat callout: light teal panel with a teal edge, so it stands out from the body text */
-    .caveat {
-      margin: 10px 0 0;
-      padding: 8px 14px;
-      background: #eaf2f4;
-      border-left: 4px solid var(--teal);
-      border-radius: 0 6px 6px 0;
-    }
-
-    .caveat p {
-      color: var(--ink);
-      margin: 0;
-    }
-
-    /* Screenshots, then the Explore the map panel as a third column at the same height */
-    .maps-row {
-      display: grid;
-      grid-template-columns: minmax(0, 680px) minmax(220px, 1fr);
-      gap: 16px 24px;
-      margin-top: 14px;
-    }
-
-    @media (max-width: 760px) {
-      .maps-row {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    .maps-row .footnote {
-      margin: 10px 0 0;
-    }
-
-    .explore {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 16px 0;
-    }
-
-    /* Logo on top, heading under it */
-    .explore-head {
-      display: flex;
-      flex-direction: column;
-      align-items: inherit;
-      gap: 8px;
-    }
-
-    .explore-head .cta-logo {
-      height: 64px;
-      max-width: 100%;
-    }
-
-    .explore p {
-      margin: 0;
-    }
-
-    .explore .cta-btn {
-      background: var(--teal);
-      color: #fff;
-      margin-top: 6px;
-      padding: 14px 34px;
-      font-size: 1.05rem;
-    }
-
-    .explore .cta-btn:hover {
-      background: var(--teal-dark);
-    }
-
-    .explore .cta-btn:focus-visible {
-      outline-color: var(--teal);
-    }
-
-    .maps {
-      display: grid;
-      /* Columns in proportion to each screenshot's aspect ratio, so both show uncropped at the same height */
-      grid-template-columns: minmax(0, 0.844fr) minmax(0, 1.484fr);
-      gap: 12px;
-      width: min(100%, 680px);
-    }
-
-    .maps figure {
-      margin: 0;
-    }
-
-    .maps a {
-      display: block;
-      position: relative;
-    }
-
-    /* "Click to zoom" label over a screenshot on hover or keyboard focus */
-    .maps a::after {
-      content: "Click to zoom";
-      position: absolute;
-      left: 50%;
-      bottom: 10px;
-      transform: translateX(-50%);
-      padding: 4px 12px;
-      border-radius: 999px;
-      background: rgba(3, 68, 89, .85);
-      color: #fff;
-      font-size: .75rem;
-      font-weight: 500;
-      white-space: nowrap;
-      opacity: 0;
-      transition: opacity .15s;
-      pointer-events: none;
-    }
-
-    .maps a:hover::after,
-    .maps a:focus-visible::after {
-      opacity: 1;
-    }
-
-    .maps img {
-      display: block;
-      width: 100%;
-      height: auto;
-      border: 1px solid var(--rule);
-      border-radius: 6px;
-    }
-
-    .maps figcaption {
-      margin-top: 4px;
-      font-size: .7rem;
-      line-height: 1.4;
-      color: var(--ink-3);
-    }
-
-    .card header {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 8px 16px;
-      align-items: baseline;
-      margin-bottom: 12px;
-    }
-
-    .sub {
-      color: var(--ink-3);
-      font-size: .82rem;
-      margin: 2px 0 0;
-    }
-
-    .footnote {
-      color: var(--ink-3);
-      font-size: .78rem;
-      margin: 14px 0 0;
-      padding-left: 10px;
-      border-left: 3px solid var(--teal-dark);
-    }
-
-    .donut-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #donut {
-      width: 170px;
-      max-width: 100%;
-    }
-
-    .legend {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: grid;
-      gap: 6px;
-      font-size: .88rem;
-      font-weight: 400;
-    }
-
-    .legend li {
-      display: grid;
-      grid-template-columns: 12px 1fr auto auto;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .legend .n {
-      text-align: right;
-      color: var(--ink);
-      font-weight: 500;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .legend .pct {
-      text-align: right;
-      color: var(--ink-3);
-      min-width: 3.5em;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .key {
-      display: flex;
-      gap: 14px;
-      font-size: .82rem;
-      color: var(--ink-2);
-      font-weight: 400;
-    }
-
-    .key span,
-    .legend li {
-      white-space: nowrap;
-    }
-
-    .sw {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border-radius: 3px;
-      vertical-align: -1px;
-      margin-right: 6px;
-    }
-
-    .legend .sw {
-      margin: 0;
-    }
-
-    .src-bar {
-      display: flex;
-      gap: 2px;
-      height: 10px;
-      border-radius: 5px;
-      overflow: hidden;
-      background: var(--grid);
-      margin: 4px 0 14px;
-    }
-
-    .src-bar span {
-      height: 100%;
-    }
-
-    .src-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px 48px;
-    }
-
-    .src-tile .n {
-      font-size: 1.6rem;
-      font-weight: 700;
-      line-height: 1.2;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .src-tile .n small {
-      font-size: .85rem;
-      font-weight: 400;
-      color: var(--ink-3);
-      margin-left: 6px;
-    }
-
-    .src-tile .lbl {
-      font-size: .85rem;
-      font-weight: 400;
-      color: var(--ink-2);
-    }
-
-    .cta-row {
-      margin-top: 20px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
-      gap: 20px;
-    }
-
-    .cta {
-      background: var(--teal);
-      color: #fff;
-      border-radius: 8px;
-      padding: 26px 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      align-items: flex-start;
-      justify-content: space-between;
-    }
-
-    .cta.alt {
-      background: var(--card);
-      color: var(--ink);
-      border: 2px solid var(--teal);
-    }
-
-    .cta.alt h2 {
-      color: var(--teal);
-    }
-
-    .cta.alt p {
-      color: var(--ink-2);
-    }
-
-    .cta.alt .cta-btn {
-      background: var(--teal);
-      color: #fff;
-    }
-
-    .cta.alt .cta-btn:hover {
-      background: var(--teal-dark);
-    }
-
-    .cta.alt .cta-btn:focus-visible {
-      outline-color: var(--teal);
-    }
-
-    .cta-logo-link {
-      flex: none;
-      line-height: 0;
-    }
-
-    .cta-logo {
-      flex: none;
-      width: auto;
-      height: 56px;
-    }
-
-    .cta h2 {
-      color: #fff;
-      font-size: 1.3rem;
-    }
-
-    .cta p {
-      margin: 6px 0 0;
-      color: #e6eef0;
-      max-width: 40em;
-    }
-
-    .cta-btn {
-      flex: none;
-      background: var(--lime);
-      color: var(--ink);
-      text-decoration: none;
-      font-weight: 600;
-      border-radius: 999px;
-      padding: 12px 26px;
-      white-space: nowrap;
-    }
-
-    .cta-btn:hover {
-      background: #fff;
-    }
-
-    .cta-btn:focus-visible {
-      outline: 3px solid #fff;
-      outline-offset: 3px;
-    }
-
-    .id-share {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 10px;
-      font-size: .82rem;
-      font-weight: 400;
-      color: var(--ink-2);
-    }
-
-    .id-share svg {
-      flex: none;
-    }
-
-    .id-share ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .id-share b {
-      font-weight: 600;
-      color: var(--ink);
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* Animal filter, species / genus / family tabs and sort, each centred in a third; stacked on narrow screens */
-    .chart-controls {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      justify-items: center;
-      align-items: center;
-      gap: 8px 16px;
-      margin-bottom: 12px;
-    }
-
-    .tab-stack {
-      display: contents;
-    }
-
-    /* Animal filter at the left, species / genus / family in the middle, sort at the right */
-    .chart-controls [role="radiogroup"] {
-      justify-self: start;
-    }
-
-    .chart-controls .sort {
-      justify-self: end;
-    }
-
-    @media (max-width: 760px) {
-      .chart-controls {
-        grid-template-columns: minmax(0, 1fr);
-        row-gap: 16px;
-        /* room between the stacked controls so a tap doesn't land on the wrong row */
-      }
-
-      .chart-controls .tabs,
-      .chart-controls .sort {
-        justify-self: start;
-      }
-    }
-
-    .chart-controls .tabs {
-      margin-bottom: 0;
-    }
-
-    .sort {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      font-size: .82rem;
-      font-weight: 400;
-      color: var(--ink-2);
-    }
-
-    .sort select {
-      font-size: .82rem;
-      background: var(--grid);
-      min-height: 36px;
-      padding: 6px 14px;
-    }
-
-    .sort select:focus-visible {
-      outline-color: var(--teal);
-    }
-
-    .tabs {
-      display: inline-flex;
-      gap: 4px;
-      padding: 4px;
-      margin-bottom: 12px;
-      background: var(--grid);
-      border-radius: 999px;
-    }
-
-    .tabs button {
-      font: 500 .82rem Poppins, "Segoe UI", sans-serif;
-      color: var(--ink-2);
-      background: none;
-      cursor: pointer;
-      border: 0;
-      border-radius: 999px;
-      padding: 6px 16px;
-    }
-
-    .tabs button:hover {
-      color: var(--teal);
-    }
-
-    .tabs button[aria-selected="true"],
-    .tabs button[aria-checked="true"] {
-      background: var(--teal);
-      color: #fff;
-    }
-
-    .tabs button:focus-visible {
-      outline: 3px solid var(--teal);
-      outline-offset: 2px;
-    }
-
-    .species-scroll {
-      max-height: 520px;
-      overflow-y: auto;
-    }
-
-    .more {
-      margin-top: 10px;
-      font: 500 .82rem Poppins, "Segoe UI", sans-serif;
-      background: none;
-      cursor: pointer;
-      border: 2px solid var(--teal);
-      color: var(--teal);
-      border-radius: 999px;
-      padding: 6px 16px;
-    }
-
-    .more:hover {
-      background: var(--teal);
-      color: #fff;
-    }
-
-    svg text {
-      fill: var(--ink-2);
-      font-family: Poppins, "Segoe UI", sans-serif;
-      font-size: 11px;
-      font-weight: 400;
-    }
-
-    svg .val {
-      fill: var(--ink);
-      font-weight: 500;
-    }
-
-    svg .centre-n {
-      fill: var(--ink);
-      font-size: 34px;
-      font-weight: 700;
-    }
-
-    svg .grid line {
-      stroke: var(--grid);
-    }
-
-    svg .axis path,
-    svg .axis line {
-      stroke: var(--rule);
-    }
-
-    svg .mark {
-      transition: opacity .12s;
-    }
-
-    svg .dim .mark:not(.on) {
-      opacity: .35;
-    }
-
-    details {
-      margin-top: 10px;
-      font-size: .82rem;
-      color: var(--ink-2);
-    }
-
-    summary {
-      cursor: pointer;
-      color: var(--teal);
-      font-weight: 400;
-    }
-
-    .tbl-wrap {
-      overflow-x: auto;
-      max-height: 280px;
-      overflow-y: auto;
-      margin-top: 8px;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-
-    th,
-    td {
-      text-align: left;
-      padding: 4px 10px 4px 0;
-      border-bottom: 1px solid var(--grid);
-    }
-
-    th {
-      font-weight: 500;
-    }
-
-    td.num,
-    th.num {
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-
-    #tip {
-      position: fixed;
-      pointer-events: none;
-      z-index: 10;
-      background: var(--teal-dark);
-      color: #fff;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: .82rem;
-      line-height: 1.45;
-      max-width: 240px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, .18);
-    }
-
-    #tip b {
-      font-weight: 600;
-    }
-
-    #reports {
-      border: 0;
-      border-radius: 10px;
-      padding: 0;
-      width: min(720px, calc(100% - 32px));
-      max-height: 80vh;
-      color: var(--ink);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, .25);
-    }
-
-    #reports::backdrop {
-      background: rgba(3, 68, 89, .45);
-    }
-
-    #reports header {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: flex-start;
-      background: var(--teal);
-      color: #fff;
-      padding: 18px 20px;
-    }
-
-    #reports h2 {
-      color: #fff;
-    }
-
-    /* Species name with its "Learn about this bird / bat" link beside it */
-    #reports .title-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: baseline;
-      gap: 4px 14px;
-    }
-
-    #reports .learn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      color: var(--lime);
-      font-size: .82rem;
-      font-weight: 500;
-      text-decoration: none;
-    }
-
-    #reports .learn[hidden] {
-      display: none;
-      /* only species pop-ups have a page to link to */
-    }
-
-    #reports .learn svg {
-      align-self: center;
-    }
-
-    /* Species names in pop-ups that list several species link to the same pages */
-    #reports td a.species-link {
-      color: var(--teal);
-      text-underline-offset: 2px;
-    }
-
-    #reports .learn:hover {
-      text-decoration: underline;
-    }
-
-    #reports .learn:focus-visible {
-      outline: 2px solid var(--lime);
-      outline-offset: 2px;
-      border-radius: 4px;
-    }
-
-    #reports .sub {
-      color: #d5e2e6;
-    }
-
-    #reports .close {
-      flex: none;
-      font: 600 1.4rem/1 Poppins, sans-serif;
-      color: #fff;
-      background: none;
-      border: 0;
-      cursor: pointer;
-      padding: 2px 6px;
-      border-radius: 6px;
-    }
-
-    #reports .close:focus-visible {
-      outline: 2px solid var(--lime);
-    }
-
-    /* Enlarged map screenshot: same teal header as the reports pop-up, sized to the image */
-    #map-view {
-      border: 0;
-      border-radius: 10px;
-      padding: 0;
-      width: fit-content;
-      max-width: calc(100% - 32px);
-      max-height: 94vh;
-      color: var(--ink);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, .25);
-      overflow: auto;
-    }
-
-    #map-view::backdrop {
-      background: rgba(3, 68, 89, .65);
-    }
-
-    /* width 0 + min-width 100%: the header wraps to the image's width instead of widening the pop-up */
-    #map-view header {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: flex-start;
-      width: 0;
-      min-width: 100%;
-      background: var(--teal);
-      color: #fff;
-      padding: 14px 16px 14px 20px;
-    }
-
-    #map-view h2 {
-      color: #fff;
-    }
-
-    #map-view .sub {
-      color: #d5e2e6;
-    }
-
-    #map-view .close {
-      flex: none;
-      font: 600 1.4rem/1 Poppins, sans-serif;
-      color: #fff;
-      background: none;
-      border: 0;
-      cursor: pointer;
-      padding: 2px 6px;
-      border-radius: 6px;
-    }
-
-    #map-view .close:focus-visible {
-      outline: 2px solid var(--lime);
-    }
-
-    /* Double-click or pinch to zoom, drag to move: the image moves inside this frame with a CSS transform */
-    #map-view .viewport {
-      overflow: hidden;
-      touch-action: none;
-      cursor: zoom-in;
-    }
-
-    #map-view .viewport.zoomed {
-      cursor: grab;
-    }
-
-    #map-view .viewport.dragging {
-      cursor: grabbing;
-    }
-
-    #map-view img {
-      display: block;
-      width: auto;
-      height: auto;
-      max-width: calc(100vw - 32px);
-      max-height: calc(94vh - 120px);
-      transform-origin: 0 0;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
-
-    .maps a {
-      cursor: zoom-in;
-    }
-
-    #reports .body {
-      padding: 6px 20px 18px;
-      overflow-y: auto;
-      max-height: calc(80vh - 90px);
-      font-size: .88rem;
-    }
-
-    #reports .note {
-      color: var(--ink-3);
-      font-size: .78rem;
-      margin: 10px 0 0;
-    }
-
-    /* Clickable column headings in the report pop-up; the sorted one is teal */
-    #reports .sort-col {
-      font: inherit;
-      font-weight: 500;
-      color: var(--teal);
-      background: none;
-      border: 0;
-      padding: 0;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    #reports .sort-col:hover {
-      text-decoration: underline;
-    }
-
-    #reports .sort-col:focus-visible {
-      outline: 2px solid var(--teal);
-      outline-offset: 2px;
-      border-radius: 4px;
-    }
-
-    svg .clickable,
-    .clickable {
-      cursor: pointer;
-    }
-
-    .legend li.clickable:hover span:first-of-type,
-    .src-tile.clickable:hover .lbl {
-      text-decoration: underline;
-    }
-
-    .clickable:focus-visible {
-      outline: 2px solid var(--teal);
-      outline-offset: 2px;
-      border-radius: 4px;
-    }
-
-    .error {
-      color: var(--ink);
-      background: var(--card);
-      border: 1px solid var(--rule);
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    footer {
-      background: var(--teal-dark);
-      color: #d5e2e6;
-      font-size: .82rem;
-    }
-
-    footer .wrap {
-      padding-block: 22px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -1168,20 +100,18 @@
           </div>
         </header>
         <div class="chart-controls">
-          <div class="tab-stack">
-            <div class="tabs" role="radiogroup" aria-label="Show records for">
-              <button role="radio" data-animal="all" aria-checked="true">All animals</button>
-              <button role="radio" data-animal="Bird" aria-checked="false" tabindex="-1">Birds</button>
-              <button role="radio" data-animal="Bat" aria-checked="false" tabindex="-1">Bats</button>
-            </div>
-            <div class="tabs" role="tablist" aria-label="Group records by">
-              <button role="tab" id="tab-species" data-level="species" aria-selected="true"
-                aria-controls="species-panel">Species</button>
-              <button role="tab" id="tab-genus" data-level="genus" aria-selected="false" aria-controls="species-panel"
-                tabindex="-1">Genus</button>
-              <button role="tab" id="tab-family" data-level="family" aria-selected="false" aria-controls="species-panel"
-                tabindex="-1">Family</button>
-            </div>
+          <div class="tabs" role="radiogroup" aria-label="Show records for">
+            <button role="radio" data-animal="all" aria-checked="true">All animals</button>
+            <button role="radio" data-animal="Bird" aria-checked="false" tabindex="-1">Birds</button>
+            <button role="radio" data-animal="Bat" aria-checked="false" tabindex="-1">Bats</button>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Group records by">
+            <button role="tab" id="tab-species" data-level="species" aria-selected="true"
+              aria-controls="species-panel">Species</button>
+            <button role="tab" id="tab-genus" data-level="genus" aria-selected="false" aria-controls="species-panel"
+              tabindex="-1">Genus</button>
+            <button role="tab" id="tab-family" data-level="family" aria-selected="false" aria-controls="species-panel"
+              tabindex="-1">Family</button>
           </div>
           <label class="sort">Sort
             <select id="sort">
@@ -1249,8 +179,7 @@
             </div>
             <p class="footnote">Static screenshots of the
               <a href="https://www.birdmapper.org/pages/explore-the-map" target="_blank" rel="noopener">Global Bird
-                Collision
-                Mapper®</a>, taken October 30, 2026.
+                Collision Mapper®</a>, taken October 30, 2026.
             </p>
           </div>
           <div class="explore">
@@ -1325,7 +254,7 @@
       <button class="close" id="reports-close" aria-label="Close">&times;</button>
     </header>
     <div class="body">
-      <div class="tbl-wrap" id="reports-table" style="max-height:none"></div>
+      <div class="tbl-wrap" id="reports-table"></div>
       <p class="note">Report # is the BirdMapper record number. Full report details are available on the
         <a href="https://www.birdmapper.org/" target="_blank" rel="noopener">Global Bird Collision Mapper®</a>.
       </p>
@@ -1367,19 +296,22 @@
       { key: "Public", label: "Reported by the public", color: "var(--src-public)" },
       { key: "Other Wildlife Organization", label: "Reported by other wildlife organization", color: "var(--src-wildlife)" },
     ];
-    const SPECIES_PREVIEW = 15;
+    const SPECIES_PREVIEW = 15;  // bars shown before "Show all"
 
-    let finds = [];
+    // ---- state ----
+    let finds = [];        // every find in the data file
+    let yearFinds = [];    // the finds in the selected year: what every chart shows
     let year = "all";
-    let showAllSpecies = false;
-    let level = "species";
-    let animal = "all";  // species chart filter: "all", "Bird" or "Bat"
-    const inAnimal = r => animal === "all" || r.animal === animal;
+    let level = "species";  // species chart tab: "species", "genus" or "family"
+    let animal = "all";     // species chart filter: "all", "Bird" or "Bat"
     let sortOrder = "desc";  // species chart: "desc" = most common first, "asc" = least common first
+    let showAllSpecies = false;
     let reportSort = { col: "date", dir: "asc" };  // report pop-ups: sorted column and direction (oldest first)
+    const inAnimal = r => animal === "all" || r.animal === animal;
 
     const fmt = d3.format(",");
     const pct = n => (n * 100).toFixed(n > 0 && n < 0.01 ? 1 : 0) + "%";
+    const share = (n, total) => total ? pct(n / total) : "–";
     const isUnknown = s => !s || /^unknown\b/i.test(s.trim());
 
     // Species chart tabs: what each find is grouped by (null = not identified that far), and how a group is named.
@@ -1412,7 +344,7 @@
         .sort((a, b) => d3.descending(a.n, b.n) || d3.ascending(a.species, b.species));
       const counts = d3.rollup(rows, v => v.length, r => +r.date.slice(5, 7));
       const byMonth = MONTHS.map((m, i) => ({ month: i + 1, label: m, n: counts.get(i + 1) || 0 }));
-      const bySource = SOURCES.map(s => ({ ...s, n: rows.filter(r => (r.source || "CUSRT") === s.key).length }));
+      const bySource = SOURCES.map(s => ({ ...s, n: rows.filter(r => r.source === s.key).length }));
       return { byCategory, bySpecies, byMonth, bySource, total: rows.length };
     }
 
@@ -1428,12 +360,12 @@
         .sort((a, b) => (sortOrder === "asc" ? d3.ascending(a.n, b.n) : d3.descending(a.n, b.n)) || d3.ascending(a.key, b.key));
     }
 
-    // ---- rounded-end bar paths (4px radius on the data end, square on the baseline) ----
-    function barH(x, y, w, h, r = 4) {
+    // ---- bar paths with a rounded data end (4px radius) and a square baseline end ----
+    function horizontalBar(x, y, w, h, r = 4) {
       r = Math.min(r, w, h / 2);
       return `M${x},${y}h${w - r}a${r},${r} 0 0 1 ${r},${r}v${h - 2 * r}a${r},${r} 0 0 1 ${-r},${r}h${-(w - r)}z`;
     }
-    function barV(x, y, w, h, r = 4) {
+    function verticalBar(x, y, w, h, r = 4) {
       if (h <= 0) return "";
       r = Math.min(r, h, w / 2);
       return `M${x},${y + h}v${-(h - r)}a${r},${r} 0 0 1 ${r},${-r}h${w - 2 * r}a${r},${r} 0 0 1 ${r},${r}v${h - r}z`;
@@ -1473,19 +405,19 @@
       const g = svg.append("g").attr("transform", "translate(110,110)");
       const pie = d3.pie().value(d => d.n).sort(null).padAngle(agg.total ? 0.02 : 0);
       const arc = d3.arc().innerRadius(r).outerRadius(R).cornerRadius(3);
-      const hover = d3.arc().innerRadius(r).outerRadius(R + 4).cornerRadius(3);
+      const arcHover = d3.arc().innerRadius(r).outerRadius(R + 4).cornerRadius(3);
 
-      const categoryRows = c => currentRows.filter(r => r.animal === c.animal && r.status === c.status);
+      const categoryRows = c => yearFinds.filter(r => r.animal === c.animal && r.status === c.status);
       if (agg.total) {
         g.selectAll("path").data(pie(agg.byCategory.filter(d => d.n > 0))).join("path")
           .attr("class", "mark").attr("d", arc).attr("fill", d => d.data.color)
           .attr("stroke", "var(--card)").attr("stroke-width", 2)
           .on("mousemove", (ev, d) => {
-            d3.select(ev.currentTarget).attr("d", hover);
+            d3.select(ev.currentTarget).attr("d", arcHover);
             showTip(ev, `<b>${d.data.key}</b><br>${fmt(d.data.n)} · ${pct(d.data.n / agg.total)}<br>Click to see reports`);
           })
           .on("mouseleave", ev => { d3.select(ev.currentTarget).attr("d", arc); hideTip(); })
-          .datum(d => ({ ...d, n: d.data.n }))
+          .datum(d => ({ ...d, n: d.data.n }))  // clickable() reads d.n
           .call(clickable, d => categoryRows(d.data), d => d.data.key);
       } else {
         g.append("circle").attr("r", (R + r) / 2).attr("fill", "none").attr("stroke", "var(--grid)").attr("stroke-width", R - r);
@@ -1495,12 +427,12 @@
 
       document.getElementById("donut-legend").innerHTML = agg.byCategory.map(d =>
         `<li><i class="sw" style="background:${d.color}"></i><span>${d.key}</span>
-     <span class="n">${fmt(d.n)}</span><span class="pct">${agg.total ? pct(d.n / agg.total) : "–"}</span></li>`).join("");
+     <span class="n">${fmt(d.n)}</span><span class="pct">${share(d.n, agg.total)}</span></li>`).join("");
       d3.select("#donut-legend").selectAll("li").data(agg.byCategory).call(clickable, categoryRows, d => d.key);
 
       table(document.getElementById("tbl-category"),
         [{ label: "Category", get: d => d.key }, { label: "Records", num: true, get: d => fmt(d.n) },
-        { label: "Share", num: true, get: d => agg.total ? pct(d.n / agg.total) : "–" }], agg.byCategory);
+        { label: "Share", num: true, get: d => share(d.n, agg.total) }], agg.byCategory);
     }
 
     function renderMonths(agg) {
@@ -1522,24 +454,25 @@
 
       const bars = svg.append("g");
       bars.selectAll("path").data(agg.byMonth).join("path").attr("class", "mark")
-        .attr("d", d => barV(x(d.label), y(d.n), x.bandwidth(), y(0) - y(d.n))).attr("fill", "var(--teal)");
+        .attr("d", d => verticalBar(x(d.label), y(d.n), x.bandwidth(), y(0) - y(d.n))).attr("fill", "var(--teal)");
       // full-height hit targets
       svg.append("g").selectAll("rect").data(agg.byMonth).join("rect")
         .attr("x", d => x(d.label) - x.step() * x.paddingInner() / 2).attr("width", x.step())
         .attr("y", m.t).attr("height", H - m.b - m.t).attr("fill", "transparent")
         .on("mousemove", (ev, d) => {
           bars.classed("dim", true).selectAll("path").classed("on", b => b === d);
-          showTip(ev, `<b>${MONTHS[d.month - 1]}</b><br>${fmt(d.n)} records` + (d.n ? "<br>Click to see reports" : ""));
+          showTip(ev, `<b>${d.label}</b><br>${fmt(d.n)} records` + (d.n ? "<br>Click to see reports" : ""));
         })
         .on("mouseleave", () => { bars.classed("dim", false); hideTip(); })
-        .call(clickable, d => currentRows.filter(r => +r.date.slice(5, 7) === d.month),
-          d => new Date(2000, d.month - 1, 1).toLocaleDateString("en-CA", { month: "long" }));
+        .call(clickable, d => yearFinds.filter(r => +r.date.slice(5, 7) === d.month),
+          d => new Date(2000, d.month - 1, 1).toLocaleDateString("en-CA", { month: "long" }));  // pop-up title: full month name
 
       table(document.getElementById("tbl-month"),
         [{ label: "Month", get: d => d.label }, { label: "Records", num: true, get: d => fmt(d.n) }], agg.byMonth);
     }
 
-    function tipFor(d, total) {
+    // Tooltip for a species chart bar
+    function speciesTip(d, total) {
       const L = LEVELS[level];
       const name = L.italic ? `<i>${esc(d.key)}</i>` : esc(level === "family" ? d.common : d.key);
       const family = level === "genus" && d.family ? `<br>${esc(d.common)} (${esc(d.family)})` : level === "family" ? `<br>${esc(d.key)}` : "";
@@ -1551,14 +484,12 @@
 
     // Small donut under the species chart's subtitle: how many finds could be named at the current tab's level
     function renderIdShare(known, unknown, total) {
-      const name = LEVELS[level].name;
+      const { name, key } = LEVELS[level];
       const parts = [
-        { label: `Identified to ${name}`, n: known, color: "var(--id-known)" },
-        { label: "Not identified", n: unknown, color: "var(--id-unknown)" },
+        { label: `Identified to ${name}`, identified: true, n: known, color: "var(--id-known)" },
+        { label: "Not identified", identified: false, n: unknown, color: "var(--id-unknown)" },
       ];
-      const share = d => total ? pct(d.n / total) : "–";
-      const key = LEVELS[level].key;
-      const partRows = d => currentRows.filter(r => inAnimal(r) && (d.label === "Not identified" ? !key(r) : key(r)));
+      const partRows = d => yearFinds.filter(r => inAnimal(r) && Boolean(key(r)) === d.identified);
       const svg = d3.select("#id-donut").attr("aria-label",
         `${fmt(known)} of ${fmt(total)} records identified to ${name}, ${fmt(unknown)} not identified`);
       svg.selectAll("*").remove();
@@ -1567,43 +498,44 @@
       if (total) {
         g.selectAll("path").data(d3.pie().value(d => d.n).sort(null)(parts.filter(d => d.n > 0))).join("path")
           .attr("d", arc).attr("fill", d => d.data.color).attr("stroke", "var(--card)").attr("stroke-width", 1.5)
-          .on("mousemove", (ev, d) => showTip(ev, `<b>${d.data.label}</b><br>${fmt(d.data.n)} records · ${share(d.data)}<br>Click to see reports`))
+          .on("mousemove", (ev, d) => showTip(ev, `<b>${d.data.label}</b><br>${fmt(d.data.n)} records · ${share(d.data.n, total)}<br>Click to see reports`))
           .on("mouseleave", hideTip)
-          .datum(d => ({ ...d, n: d.data.n }))
+          .datum(d => ({ ...d, n: d.data.n }))  // clickable() reads d.n
           .call(clickable, d => partRows(d.data), d => d.data.label);
       } else {
         g.append("circle").attr("r", 18.5).attr("fill", "none").attr("stroke", "var(--grid)").attr("stroke-width", 9);
       }
       document.getElementById("id-legend").innerHTML = parts.map(d =>
-        `<li><i class="sw" style="background:${d.color}"></i>${d.label}: <b>${fmt(d.n)}</b> (${share(d)})</li>`).join("");
+        `<li><i class="sw" style="background:${d.color}"></i>${d.label}: <b>${fmt(d.n)}</b> (${share(d.n, total)})</li>`).join("");
       d3.select("#id-legend").selectAll("li").data(parts).call(clickable, partRows, d => d.label);
     }
 
-    function renderSpecies(agg) {
+    function renderSpecies() {
       const el = document.getElementById("species");
       const L = LEVELS[level];
       document.getElementById("species-title").textContent = `Records by ${L.name}`;
       // Unidentified finds would dwarf every bar, so they're counted in the subtitle and donut instead
-      const shown = currentRows.filter(inAnimal);
-      const total = shown.length;
-      const all = groupFinds(shown);
-      const unknown = total - d3.sum(all, d => d.n);
+      const animalFinds = yearFinds.filter(inAnimal);
+      const total = animalFinds.length;
+      const groups = groupFinds(animalFinds);
+      const unknown = total - d3.sum(groups, d => d.n);
       document.getElementById("species-sub").textContent =
         unknown ? `${fmt(unknown)} records not identified to ${L.name}` : `All records identified to ${L.name}`;
       renderIdShare(total - unknown, unknown, total);
-      const rows = showAllSpecies ? all : all.slice(0, SPECIES_PREVIEW);
+      const shownGroups = showAllSpecies ? groups : groups.slice(0, SPECIES_PREVIEW);
       const W = Math.max(300, el.clientWidth), rowH = 22;
       const labelW = level === "family" ? Math.min(290, W * 0.5) : Math.min(200, W * 0.42);
       const m = { t: 4, r: 40, b: 4, l: labelW };
-      const H = m.t + m.b + rows.length * rowH;
+      const H = m.t + m.b + shownGroups.length * rowH;
       // Scaled to the largest group, shown or not, so "least common first" doesn't stretch 1-find bars full width
-      const x = d3.scaleLinear().domain([0, d3.max(all, d => d.n) || 1]).range([m.l, W - m.r]);
-      const y = d3.scaleBand().domain(rows.map(d => d.key + "|" + d.animal)).range([m.t, H - m.b]).paddingInner(0.25);
+      const x = d3.scaleLinear().domain([0, d3.max(groups, d => d.n) || 1]).range([m.l, W - m.r]);
+      const rowId = d => d.key + "|" + d.animal;  // groups are split by animal, so the name alone isn't unique
+      const y = d3.scaleBand().domain(shownGroups.map(rowId)).range([m.t, H - m.b]).paddingInner(0.25);
 
       const svg = d3.select(el).html("").append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("width", "100%")
         .attr("role", "img").attr("aria-label", `Bar chart of records by ${L.name}`);
       const g = svg.append("g");
-      const row = g.selectAll("g").data(rows).join("g").attr("transform", d => `translate(0,${y(d.key + "|" + d.animal)})`);
+      const row = g.selectAll("g").data(shownGroups).join("g").attr("transform", d => `translate(0,${y(rowId(d))})`);
       const bh = y.bandwidth();
 
       row.append("text").attr("x", m.l - 8).attr("y", bh / 2).attr("dy", "0.35em").attr("text-anchor", "end")
@@ -1617,26 +549,26 @@
         });
       // Each bar in two parts: records before SPLIT_DAY (square end, unless it's the whole bar), then the rest
       row.filter(d => d.before > 0).append("path").attr("class", "mark").attr("fill", "var(--before-split)")
-        .attr("d", d => d.before === d.n ? barH(m.l, 0, Math.max(1, x(d.n) - m.l), bh)
+        .attr("d", d => d.before === d.n ? horizontalBar(m.l, 0, Math.max(1, x(d.n) - m.l), bh)
           : `M${m.l},0H${x(d.before)}V${bh}H${m.l}Z`);
       row.filter(d => d.n > d.before).append("path").attr("class", "mark").attr("fill", "var(--after-split)")
-        .attr("d", d => barH(x(d.before), 0, Math.max(1, x(d.n) - x(d.before)), bh));
+        .attr("d", d => horizontalBar(x(d.before), 0, Math.max(1, x(d.n) - x(d.before)), bh));
       row.append("text").attr("class", "val").attr("x", d => x(d.n) + 6).attr("y", bh / 2).attr("dy", "0.35em").text(d => fmt(d.n));
       row.append("rect").attr("x", 0).attr("y", -y.step() * y.paddingInner() / 2).attr("width", W).attr("height", y.step())
         .attr("fill", "transparent").attr("class", "clickable")
         .attr("tabindex", 0).attr("role", "button").attr("aria-label", d => `${L.label(d)}: ${d.n} records. Show reports`)
         .on("mousemove", (ev, d) => {
           g.classed("dim", true).selectAll(".mark").classed("on", b => b === d);
-          showTip(ev, tipFor(d, total));
+          showTip(ev, speciesTip(d, total));
         })
         .on("mouseleave", () => { g.classed("dim", false); hideTip(); })
         .on("click", (ev, d) => { hideTip(); openGroup(d); })
         .on("keydown", (ev, d) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openGroup(d); } });
 
       const btn = document.getElementById("more");
-      btn.hidden = all.length <= SPECIES_PREVIEW;
+      btn.hidden = groups.length <= SPECIES_PREVIEW;
       btn.textContent = showAllSpecies ? `Show ${SPECIES_PREVIEW} ${sortOrder === "asc" ? "least" : "most"} common`
-        : `Show all ${all.length} ${L.plural}`;
+        : `Show all ${groups.length} ${L.plural}`;
 
       const cols = {
         species: [{ label: "Species", get: d => d.key }],
@@ -1647,87 +579,68 @@
         [...cols, { label: "Animal", get: d => d.animal },
         { label: SPLIT_LABELS.before, num: true, get: d => fmt(d.before) },
         { label: SPLIT_LABELS.after, num: true, get: d => fmt(d.n - d.before) },
-        { label: "Records", num: true, get: d => fmt(d.n) }], all);
+        { label: "Records", num: true, get: d => fmt(d.n) }], groups);
     }
 
-    // ---- species / genus / family tabs ----
-    const tabs = [...document.querySelectorAll('.tabs [role="tab"]')];
-    function selectTab(tab) {
-      tabs.forEach(t => {
-        const on = t === tab;
-        t.setAttribute("aria-selected", on);
-        t.tabIndex = on ? 0 : -1;
+    // ---- species chart controls: all animals / birds / bats, and species / genus / family tabs ----
+    // One button of the group is selected (attr = "aria-checked" or "aria-selected"); arrow keys move the selection.
+    function buttonGroup(buttons, attr, onSelect) {
+      const select = btn => {
+        buttons.forEach(b => {
+          const on = b === btn;
+          b.setAttribute(attr, on);
+          b.tabIndex = on ? 0 : -1;
+        });
+        onSelect(btn);
+        showAllSpecies = false;
+        if (finds.length) render();
+      };
+      buttons.forEach((b, i) => {
+        b.addEventListener("click", () => select(b));
+        b.addEventListener("keydown", ev => {
+          const step = { ArrowRight: 1, ArrowLeft: -1 }[ev.key];
+          if (!step) return;
+          const next = buttons[(i + step + buttons.length) % buttons.length];
+          next.focus(); select(next);
+        });
       });
+    }
+    buttonGroup([...document.querySelectorAll('.tabs [role="radio"]')], "aria-checked", btn => {
+      animal = btn.dataset.animal;
+    });
+    buttonGroup([...document.querySelectorAll('.tabs [role="tab"]')], "aria-selected", tab => {
       document.getElementById("species-panel").setAttribute("aria-labelledby", tab.id);
       level = tab.dataset.level;
-      showAllSpecies = false;
-      if (finds.length) render();
-    }
-    tabs.forEach((t, i) => {
-      t.addEventListener("click", () => selectTab(t));
-      t.addEventListener("keydown", ev => {
-        const step = { ArrowRight: 1, ArrowLeft: -1 }[ev.key];
-        if (!step) return;
-        const next = tabs[(i + step + tabs.length) % tabs.length];
-        next.focus(); selectTab(next);
-      });
-    });
-
-    // ---- all animals / birds / bats filter for the same chart ----
-    const animalBtns = [...document.querySelectorAll('.tabs [role="radio"]')];
-    function selectAnimal(btn) {
-      animalBtns.forEach(b => {
-        const on = b === btn;
-        b.setAttribute("aria-checked", on);
-        b.tabIndex = on ? 0 : -1;
-      });
-      animal = btn.dataset.animal;
-      showAllSpecies = false;
-      if (finds.length) render();
-    }
-    animalBtns.forEach((b, i) => {
-      b.addEventListener("click", () => selectAnimal(b));
-      b.addEventListener("keydown", ev => {
-        const step = { ArrowRight: 1, ArrowLeft: -1 }[ev.key];
-        if (!step) return;
-        const next = animalBtns[(i + step + animalBtns.length) % animalBtns.length];
-        next.focus(); selectAnimal(next);
-      });
     });
 
     function renderSources(agg) {
-      const share = d => agg.total ? pct(d.n / agg.total) : "–";
       const bar = document.getElementById("src-bar");
       bar.innerHTML = agg.bySource.filter(d => d.n > 0).map(d =>
         `<span style="flex:${d.n};background:${d.color}"></span>`).join("");
-      const sourceRows = d => currentRows.filter(r => (r.source || "CUSRT") === d.key);
+      const sourceRows = d => yearFinds.filter(r => r.source === d.key);
       d3.select(bar).selectAll("span").data(agg.bySource.filter(d => d.n > 0))
-        .on("mousemove", (ev, d) => showTip(ev, `<b>${d.label}</b><br>${fmt(d.n)} records · ${share(d)}<br>Click to see reports`))
+        .on("mousemove", (ev, d) => showTip(ev, `<b>${d.label}</b><br>${fmt(d.n)} records · ${share(d.n, agg.total)}<br>Click to see reports`))
         .on("mouseleave", hideTip)
         .call(clickable, sourceRows, d => d.label, { sourceInTitle: true });
       // A category with no finds in any year gets no tile
       const tiles = agg.bySource.filter(d => finds.some(f => f.source === d.key));
       document.getElementById("src-row").innerHTML = tiles.map(d =>
-        `<div class="src-tile"><div class="n">${fmt(d.n)}<small>${share(d)}</small></div>
+        `<div class="src-tile"><div class="n">${fmt(d.n)}<small>${share(d.n, agg.total)}</small></div>
      <div class="lbl"><i class="sw" style="background:${d.color}"></i>${d.label}</div></div>`).join("");
       d3.select("#src-row").selectAll(".src-tile").data(tiles).call(clickable, sourceRows, d => d.label, { sourceInTitle: true });
     }
 
-    // ---- pop-up: the reports behind any part of a chart (a species bar, a month, a donut slice, ...) ----
-    const dialog = document.getElementById("reports");
-    document.getElementById("reports-close").addEventListener("click", () => dialog.close());
-    dialog.addEventListener("click", ev => { if (ev.target === dialog) dialog.close(); });  // click on backdrop
-
     // ---- pop-up: an enlarged survey-area map screenshot, with its caption ----
     const mapView = document.getElementById("map-view");
+    const port = document.getElementById("map-view-port"), bigImg = document.getElementById("map-view-img");
     document.getElementById("map-view-close").addEventListener("click", () => mapView.close());
-    mapView.addEventListener("click", ev => { if (ev.target === mapView) mapView.close(); });
+    mapView.addEventListener("click", ev => { if (ev.target === mapView) mapView.close(); });  // click on backdrop
     document.querySelectorAll(".maps figure").forEach(fig => {
       fig.querySelector("a").addEventListener("click", ev => {
         ev.preventDefault();  // the link is only the fallback for when the pop-up can't open
-        const img = fig.querySelector("img"), big = document.getElementById("map-view-img");
-        big.src = img.src;
-        big.alt = img.alt;
+        const img = fig.querySelector("img");
+        bigImg.src = img.src;
+        bigImg.alt = img.alt;
         document.getElementById("map-view-title").textContent = fig.dataset.title;
         document.getElementById("map-view-sub").textContent =
           fig.querySelector("figcaption").textContent.replace(/\s+/g, " ").trim() +
@@ -1739,7 +652,6 @@
 
     // Zoom and pan, with no on-screen controls so the screenshot doesn't look like a live map.
     // Scale s and offset (x, y) in px from the frame's top-left; s = 1 is the whole image.
-    const port = document.getElementById("map-view-port"), bigImg = document.getElementById("map-view-img");
     const MAX_ZOOM = 5;
     let view = { s: 1, x: 0, y: 0 };
     function applyZoom() {
@@ -1758,12 +670,13 @@
       view = { s, x: px - (px - view.x) * k, y: py - (py - view.y) * k };
       applyZoom();
     }
+    // Pointer position relative to the frame's top-left
     const local = ev => { const r = port.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
     port.addEventListener("dblclick", ev => view.s > 1 ? resetZoom() : zoomAt(2.5, ...local(ev)));
 
     // One pointer drags the zoomed image; two (a pinch) zoom around their midpoint
-    const pointers = new Map();
-    let pinch = null;
+    const pointers = new Map();  // pointerId -> last position
+    let pinch = null;            // distance between the two fingers at the last move
     port.addEventListener("pointerdown", ev => {
       port.setPointerCapture(ev.pointerId);
       pointers.set(ev.pointerId, local(ev));
@@ -1793,8 +706,11 @@
     port.addEventListener("pointercancel", lift);
     window.addEventListener("resize", () => { if (mapView.open) applyZoom(); });
 
-    // A report with several animals becomes several finds; it's shown once with its counts.
-    // sourceInTitle: opened from "Who reported", so the Reported by column only shows if it differs between reports.
+    // ---- pop-up: the reports behind any part of a chart (a species bar, a month, a donut slice, ...) ----
+    const reportsDialog = document.getElementById("reports");
+    document.getElementById("reports-close").addEventListener("click", () => reportsDialog.close());
+    reportsDialog.addEventListener("click", ev => { if (ev.target === reportsDialog) reportsDialog.close(); });  // click on backdrop
+
     // "Learn about this bird / bat" link for a species pop-up. Birds go to Cornell's All About Birds guide
     // (allaboutbirds.org/guide/Chipping_Sparrow/: spaces to underscores, no apostrophes); GUIDE_LINKS covers the pages
     // that don't follow that pattern (checked by CUSRT, Oct 2026). All Alberta bats are on one Alberta Bats page.
@@ -1812,8 +728,11 @@
       return { url, text: "Learn about this bird" };
     }
 
+    // A report with several animals becomes several finds; it's shown once with its counts.
+    // italic: the title is a genus. sourceInTitle: opened from "Reporting source", so the Reported by column only
+    // shows if it differs between reports. learnMore: a learnLink() for the title.
     function openReports(rows, title, { italic = false, sourceInTitle = false, learnMore = null } = {}) {
-      const reports = d3.groups(rows, r => r.report ?? `${r.date}|${r.source}`).map(([, rs]) => {
+      const reports = d3.groups(rows, r => r.report).map(([, rs]) => {
         const deceased = rs.filter(r => r.status === "Deceased").length, alive = rs.length - deceased;
         const outcome = [deceased && (deceased > 1 ? `${deceased} deceased` : "Deceased"),
         alive && (alive > 1 ? `${alive} alive` : "Alive")].filter(Boolean).join(", ");
@@ -1841,7 +760,7 @@
         // "11 deceased, 4 alive" sorts with "Deceased", not ahead of "Alive"
         { id: "outcome", label: "Outcome", get: r => r.outcome, sortBy: r => r.outcome.replace(/^\d+ /, "").toLowerCase() },
         ...(showSource ? [{ id: "source", label: "Reported by", get: reportedBy }] : []),
-        { id: "report", label: "Report #", num: true, get: r => r.report ?? "–", sortBy: r => r.report ?? Infinity },
+        { id: "report", label: "Report #", num: true, get: r => r.report, sortBy: r => r.report },
       ];
       const draw = () => {
         const col = cols.find(c => c.id === reportSort.col) ?? cols[0];
@@ -1852,7 +771,7 @@
         table(document.getElementById("reports-table"), cols.map(c => {
           const on = c === col, arrow = on ? (reportSort.dir === "asc" ? " ▲" : " ▼") : "";
           const state = on ? `, sorted ${reportSort.dir === "asc" ? words[0] : words[1]}${c.id === "date" || c.id === "report" ? " first" : ""}` : "";
-          return { ...c, label: `<button class="sort-col${on ? " on" : ""}" data-col="${c.id}" aria-label="Sort by ${c.label}${state}">${c.label}${arrow}</button>` };
+          return { ...c, label: `<button class="sort-col" data-col="${c.id}" aria-label="Sort by ${c.label}${state}">${c.label}${arrow}</button>` };
         }), reports);
         document.querySelectorAll("#reports-table .sort-col").forEach(btn => btn.addEventListener("click", () => {
           const id = btn.dataset.col;
@@ -1862,9 +781,9 @@
         }));
       };
       draw();
-      const h = document.getElementById("reports-title");
-      h.textContent = title;
-      h.style.fontStyle = italic ? "italic" : "";
+      const heading = document.getElementById("reports-title");
+      heading.textContent = title;
+      heading.style.fontStyle = italic ? "italic" : "";
       const learn = document.getElementById("reports-learn");
       learn.hidden = !learnMore;
       if (learnMore) {
@@ -1874,27 +793,25 @@
       document.getElementById("reports-sub").textContent =
         `${fmt(rows.length)} ${rows.length === 1 ? "record" : "records"} in ${fmt(reports.length)} ` +
         `${reports.length === 1 ? "report" : "reports"} · ${year === "all" ? "all years" : year}`;
-      dialog.querySelector(".body").scrollTop = 0;
-      dialog.showModal();
+      reportsDialog.querySelector(".body").scrollTop = 0;
+      reportsDialog.showModal();
     }
 
     // From the species chart: one species, genus or family
     function openGroup(d) {
       const L = LEVELS[level];
-      openReports(currentRows.filter(r => L.key(r) === d.key && r.animal === d.animal), L.label(d),
+      openReports(yearFinds.filter(r => L.key(r) === d.key && r.animal === d.animal), L.label(d),
         { italic: L.italic, learnMore: level === "species" ? learnLink(d.key, d.animal) : null });
     }
 
-    let currentRows = [];
     function render() {
-      const rows = year === "all" ? finds : finds.filter(f => f.date.slice(0, 4) === year);
-      currentRows = rows;
-      const agg = aggregate(rows);
+      yearFinds = year === "all" ? finds : finds.filter(f => f.date.slice(0, 4) === year);
+      const agg = aggregate(yearFinds);
       renderHeadline(agg);
       renderDonut(agg);
       renderMonths(agg);
       renderSources(agg);
-      renderSpecies(agg);
+      renderSpecies();
     }
 
     // ---- boot ----

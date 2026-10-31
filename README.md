@@ -1,85 +1,156 @@
-# Calgary Bird & Bat Collision Dashboard
+# CUSRT Wildlife Dashboard
 
-Static dashboard of bird window collisions and bat rescues in Calgary. (Bats are called rescues, not
-collisions: they're found grounded and the cause isn't always a collision.)
+A static dashboard of the birds and bats the Calgary Urban Species Response Team (CUSRT), the public and other
+wildlife organizations have reported in Calgary. Birds are mostly window collisions; bats are found grounded,
+which isn't always caused by a collision.
 
-```
-data/collisions.json            data the dashboard loads (built from BirdMapper)
+The data comes from the [Global Bird Collision Mapper](https://www.birdmapper.org/) (BirdMapper, run by FLAP
+Canada). A GitHub Action pulls it every hour, so new reports show up on the dashboard without anyone touching it.
+
+## What's in the repo
+
+```text
 site/index.html                 the dashboard (plain HTML + d3 v7, no build step)
-scripts/build_data.py           BirdMapper -> data/collisions.json
-data/alpha_codes.csv            4-letter bird codes -> common and scientific names (from the IBP PDF)
-data/ioc_families.csv           genus -> family, from the IOC World Bird List (scripts/make_ioc_families.py)
-data/NABat_Species_Codes.csv    bat species, scientific names and 4-letter codes, from NABat
-scripts/explore_birdmapper.py   probes a BirdMapper / GBCM FeatureServer
-.github/workflows/refresh.yml   hourly: runs build_data.py and commits the result
+site/style.css                  the dashboard's styles
+data/collisions.json            the data the dashboard loads, built by build_data.py
+scripts/build_data.py           pulls BirdMapper reports and writes data/collisions.json
+.github/workflows/refresh.yml   runs build_data.py every hour and commits any changes
+
+data/alpha_codes.csv            4-letter bird codes -> common and scientific names (built by make_alpha_codes.py)
+data/ioc_families.csv           bird genus -> family, from the IOC World Bird List (built by make_ioc_families.py)
+data/NABat_Species_Codes.csv    bat names, scientific names and 4-letter codes, from NABat
+scripts/make_alpha_codes.py     rebuilds alpha_codes.csv from the IBP alpha-code PDF
+scripts/make_ioc_families.py    rebuilds ioc_families.csv from the IOC master list
+scripts/explore_birdmapper.py   probes BirdMapper's API (used to find the data layer in the first place)
 ```
 
 ## View it locally
-The page fetches `../data/collisions.json`, so it has to be served rather than opened as a file:
 
-```
+The page loads `../data/collisions.json`, so it has to be served, not opened as a file. From the repo root:
+
+```sh
 python -m http.server
 ```
-Then open http://localhost:8000/site/
+
+Then open <http://localhost:8000/site/>.
 
 ## Refresh the data
+
+```sh
+python scripts/build_data.py                                                  # every report in the Calgary area
+python scripts/build_data.py --group "Calgary Urban Species Response Team"    # only reports in CUSRT's group
 ```
-python scripts/build_data.py                                                  # all Calgary reports
-python scripts/build_data.py --group "Calgary Urban Species Response Team"    # only CUSRT's reports
+
+No account or API key is needed. The script reads BirdMapper's public layer ("Bird Collision Data - public")
+inside a box around Calgary (`--bbox`, default `-114.32,50.84,-113.86,51.22`) and writes one record per animal
+to `data/collisions.json`. Only standard-library Python is used.
+
+After each run it prints a run report: how many reports were read, what was skipped and why, and anything that
+needs a person to decide (see [When the run report asks for a decision](#when-the-run-report-asks-for-a-decision)).
+
+### Privacy
+
+Only the fields below are written out. Reporters' names and emails, notes and locations never reach the site.
+
+### The fields
+
+Each record looks like this:
+
+```json
+{"date": "2025-09-14", "animal": "Bird", "status": "Deceased", "species": "Dark-eyed Junco", "genus": "Junco",
+ "family": "Passerellidae", "family_common": "New World Sparrows", "source": "CUSRT", "report": 1160123}
 ```
-Data comes from the Global Bird Collision Mapper's public layer, "Bird Collision Data - public" (FLAP
-Canada), queried for the Calgary area (`--bbox`, default `-114.32,50.84,-113.86,51.22`). No account or
-key is needed. Only `date`, `animal`, `status`, `species`, `genus`, `family`, `family_common`, `source` ("CUSRT" when the report is
-in the Calgary Urban Species Response Team group and came from the team's surveys, including strikes building
-staff, cleaners, security or passersby reported to a shift or volunteer, and team finds entered outside the group ("CMSRT walk",
-"CUSRT Dawn shift"; CMSRT is CUSRT's name before the rebrand); "Public" otherwise, including CUSRT-entered reports from
-iNaturalist and CUSRT's public window strike form; "Other Wildlife
-Organization" for finds documented by another wildlife organization, listed by hand in `WILDLIFE_ORG_REPORTS`
-after CUSRT checks them, with the organization's name in `organization`. See `gbcm_source` in `build_data.py`) and `report` (the BirdMapper objectid,
-shown in the species chart's click-through table) are written out; usernames, notes and
-locations never reach the site. The script prints a report of anything it skipped or couldn't match.
 
-How each field is read:
-- **date**: the report's `dateutc` timestamp, converted to Calgary time.
-- **status**: `Deceased` / `Alive` (BirdMapper's `Dead` is written as `Deceased`). "Multiple" reports use their dead/alive counts, and any report
-  with counts above 1 becomes one row per animal. Reports with any other status ("Unknown", "None", "No
-  Birds Found", "Multiple" with no counts) are read from their notes, species "Unknown", using CUSRT's rules:
-  patrols with no find and impacts left on glass (imprints, marks, feathers stuck to windows) are left out;
-  scavenged, crushed, feather piles, partial remains or a bird "left" for the team count as Deceased; otherwise
-  the status is what was seen last (flew off, rescued → Alive). Reports the rules can't settle are left out
-  and listed in the run report; CUSRT's one-off decisions go in `OUTCOME_OVERRIDES` in `build_data.py`.
-- **species**: the species field, or the 4-letter `alpha_code` when that's empty, mapped to the current
-  AOS common name via `data/alpha_codes.csv`. Hedged or group-only IDs ("Sparrow sp.") become
-  "Unknown". Older names and typos are fixed in `SPECIES_FIXES` in `build_data.py`.
-- **genus / family**: the genus is the first word of the species' scientific name (`alpha_codes.csv`); the
-  family is that genus's family in the IOC World Bird List (v15.2, `data/ioc_families.csv`), with its
-  English name in `family_common`. Group-only IDs still get what they tell us, via `TAXON_GROUPS` in
-  `build_data.py` ("Sparrow sp." -> Passerellidae, "Unidentified Empidonax" -> *Empidonax*, Tyrannidae).
-  Bats get their genus from NABat's scientific names and their family from `BAT_FAMILIES` (Alberta's are all
-  Vespertilionidae). Null when not even the family is known. To update to a
-  new IOC version, download its master list .xlsx and run `python scripts/make_ioc_families.py <file>`.
-- **animal**: GBCM has no bat species, so bats are logged as "No Birds Found"/"Unknown" with the bat
-  described in the notes. Those reports become Bat finds, with species (Silver-haired, Big Brown, …) and
-  deceased/alive read from the notes. Species are matched against NABat's list (`data/NABat_Species_Codes.csv`)
-  by common name, scientific name or 4-letter code ("LANO"); a bare "myotis" gives the genus only.
+- **date**: when the animal was found, in Calgary time (from BirdMapper's `dateutc`).
+- **animal**: `Bird` or `Bat`. BirdMapper has no bat species, so bats are logged as "No Birds Found" or
+  "Unknown" with the bat described in the notes. The script spots those from the notes and matches the species
+  against NABat's list by common name, scientific name or code (e.g. "LANO" for Silver-haired Bat). A bare
+  "myotis" gives the genus only.
+- **status**: `Deceased` or `Alive` (BirdMapper's "Dead" is shown as "Deceased").
+  - A report with counts (e.g. 3 dead, 1 alive) becomes one record per animal.
+  - Reports with no dead/alive status ("Unknown", "None", "No Birds Found") are read from their notes, using
+    CUSRT's rules:
+    - patrols with no find, and impacts left on glass (imprints, marks, feathers stuck to a window), are left out
+    - scavenged, crushed, feather piles, partial remains, or a bird "left" for the team: Deceased
+    - otherwise, whatever was seen last (flew off, rescued): Alive
 
-## Hourly refresh (GitHub)
-`.github/workflows/refresh.yml` runs `build_data.py` every hour and commits `data/collisions.json` if it
-changed. No secrets are needed.
+    These records are listed with species "Unknown".
+- **species**: BirdMapper's species field, or its 4-letter `alpha_code` when that's empty, turned into the
+  current AOS common name using `data/alpha_codes.csv`. Uncertain IDs ("possible", "sp.", "?") and group-only
+  IDs ("Sparrow") become "Unknown". Typos and older names are fixed in `SPECIES_FIXES` in `build_data.py`.
+- **genus / family / family_common**: the genus is the first word of the species' scientific name; the family
+  and its English name come from the IOC World Bird List (v15.2). Group-only IDs still get what they tell us,
+  through `TAXON_GROUPS` ("Sparrow sp." → Passerellidae; "Unidentified Empidonax" → *Empidonax*, Tyrannidae).
+  Bats get their family from `BAT_FAMILIES` (every bat in Alberta is a vesper bat, Vespertilionidae). These
+  fields are empty (null) when not even the family is known.
+- **source**: who reported the find.
+  - `CUSRT`: the report came from the team's survey work. That includes strikes that building staff, cleaners,
+    security or passersby reported to a CUSRT shift or volunteer, and team finds entered outside CUSRT's
+    BirdMapper group ("CUSRT Dawn shift", or "CMSRT walk" from before the rebrand).
+  - `Public`: everything else, including reports CUSRT entered for someone else: finds from iNaturalist and
+    submissions to CUSRT's public window strike form.
+  - `Other Wildlife Organization`: finds documented by another wildlife organization (Calgary Wildlife, AIWC,
+    …). These are listed by hand in `WILDLIFE_ORG_REPORTS` once CUSRT has checked them, and also carry the
+    organization's name in an `organization` field.
 
-## Style
-Styled to match calgaryurbanspecies.ca: deep teal (`#035772`) banner, off-white page, Poppins, lime
-(`#e0fd2c`) highlights, pill buttons. Light mode only, like the main site.
+  The rules are in `gbcm_source` in `build_data.py`.
+- **report**: the BirdMapper report number (objectid). It's shown in the dashboard's report pop-ups so a find
+  can be looked up on BirdMapper.
 
-The four category colours (`--deceased-bird`, `--live-bird`, `--deceased-bat`, `--live-bat`) are set once at the
-top of the `<style>` block in `site/index.html`, next to `--before-split` / `--after-split` for the species
-chart bars (light and dark teal). The month chart uses the site teal. Every chart has a "Show as table" view.
-The species chart has All animals / Birds / Bats and Species / Genus / Family tabs (`LEVELS` in `site/index.html`),
-and each bar is split into records before July 15 and from July 15 on (`SPLIT_DAY` in `site/index.html`).
+### When the run report asks for a decision
+
+Some reports can't be settled by the rules. They're left out (or left as they are) and listed in the run report
+by report number until someone decides. Each decision goes in a list near the top of `build_data.py`, with the
+date and a short reason:
+
+| The run report says | Add the report number to |
+| --- | --- |
+| left out, needs a decision | `OUTCOME_OVERRIDES` (`"Deceased"`, `"Alive"` or `None` to leave it out) |
+| possible wildlife organization find | `WILDLIFE_ORG_REPORTS` (the organization's name, or `None` if it isn't one) |
+| species not in the alpha-code list | `SPECIES_FIXES` (the name as written, in lower case, and the correct one) |
+| species with no IOC family | `SCIENTIFIC_FIXES`, or rerun `make_ioc_families.py` with a newer IOC list |
+
+Reports that the rules put in the wrong source group go in `SOURCE_OVERRIDES`.
+
+### Updating the reference lists
+
+- **IOC families**: download the newest master list (.xlsx) from
+  <https://www.worldbirdnames.org/new/ioc-lists/master-list-2/> and run
+  `python scripts/make_ioc_families.py <file>`.
+- **Alpha codes**: when the IBP publishes a new `Alpha_codes_eng.pdf`, put it in `data/` and run
+  `python scripts/make_alpha_codes.py data/Alpha_codes_eng.pdf` (needs `pdftotext`, which comes with Git for
+  Windows).
+
+## Hourly refresh
+
+`.github/workflows/refresh.yml` runs `build_data.py` every hour (at 17 minutes past) and commits
+`data/collisions.json` if it changed. It needs no secrets. It can also be started by hand from the repo's
+Actions tab.
+
+## Look and feel
+
+The dashboard matches calgaryurbanspecies.ca: a deep teal (`#035772`) banner, off-white page, Poppins font,
+lime (`#e0fd2c`) highlights and pill-shaped buttons. Like the main site, it's light mode only.
+
+All colours are set once at the top of `site/style.css`:
+
+- `--deceased-bird`, `--live-bird`, `--deceased-bat`, `--live-bat`: the four status categories
+- `--before-split`, `--after-split`: the two parts of each species bar (dark and lighter teal)
+- `--id-known`, `--id-unknown`: the small "identified" donut on the species chart
+- `--src-cusrt`, `--src-public`, `--src-wildlife`: the reporting source bar
+
+Every chart has a "Show as table" view, and clicking any part of a chart opens a list of the reports behind it.
+
+The species chart can show all animals, birds or bats, grouped by species, genus or family (`LEVELS` in
+`site/index.html`). Each bar is split into records before July 15 and from July 15 on. To move that date,
+change `SPLIT_DAY` and `SPLIT_LABELS` in `site/index.html` and the chart's key just above the chart in the same
+file.
 
 ## Credits
-The reference lists in `data/` each credit their source on their first lines:
+
+Each reference list in `data/` credits its source in its first lines:
+
 - `alpha_codes.csv`: Peter Pyle and David F. DeSante, The Institute for Bird Populations (alpha codes, 66th AOS
-  Supplement, 2025), https://www.birdpop.org/pages/birdSpeciesCodes.php
-- `ioc_families.csv`: IOC World Bird List (Gill, Donsker & Rasmussen, eds.), https://www.worldbirdnames.org/
-- `NABat_Species_Codes.csv`: North American Bat Monitoring Program (NABat), https://www.nabatmonitoring.org/species-codes
+  Supplement, 2025), <https://www.birdpop.org/pages/birdSpeciesCodes.php>
+- `ioc_families.csv`: IOC World Bird List (Gill, Donsker & Rasmussen, eds.), <https://www.worldbirdnames.org/>
+- `NABat_Species_Codes.csv`: North American Bat Monitoring Program (NABat), <https://www.nabatmonitoring.org/species-codes>

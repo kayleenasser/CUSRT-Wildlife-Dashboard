@@ -3,8 +3,7 @@
 Run once whenever a new IOC version comes out (download master_ioc_list_vX.Y.xlsx from
 https://www.worldbirdnames.org/new/ioc-lists/master-list-2/):
     python scripts/make_ioc_families.py master_ioc_list_v15.2.xlsx
-
-Standard library only (reads the .xlsx directly).
+    
 """
 
 import csv
@@ -20,10 +19,11 @@ NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 
 def sheet_rows(path):
     """Each row of the first sheet as {column letter: text}."""
-    z = zipfile.ZipFile(path)
-    shared = ["".join(t.text or "" for t in si.iter(NS + "t"))
-              for si in ET.fromstring(z.read("xl/sharedStrings.xml")).iter(NS + "si")]
-    for row in ET.fromstring(z.read("xl/worksheets/sheet1.xml")).iter(NS + "row"):
+    with zipfile.ZipFile(path) as z:
+        shared_xml, sheet_xml = z.read("xl/sharedStrings.xml"), z.read("xl/worksheets/sheet1.xml")
+    # Text cells hold an index into the workbook's shared strings
+    shared = ["".join(t.text or "" for t in si.iter(NS + "t")) for si in ET.fromstring(shared_xml).iter(NS + "si")]
+    for row in ET.fromstring(sheet_xml).iter(NS + "row"):
         cells = {}
         for c in row.iter(NS + "c"):
             v = c.find(NS + "v")
@@ -36,17 +36,18 @@ def sheet_rows(path):
 def main():
     xlsx = sys.argv[1] if len(sys.argv) > 1 else "master_ioc_list_v15.2.xlsx"
     rows = sheet_rows(xlsx)
-    title, citation = next(rows).get("C", ""), next(rows).get("C", "")  # "IOC WORLD BIRD LIST (15.2) ...", "Gill, F, ..."
+    title = next(rows).get("C", "")     # "IOC WORLD BIRD LIST (15.2) ..."
+    citation = next(rows).get("C", "")  # "Gill, F, ..."
     header = next(r for r in rows if r.get("D") == "Family (Scientific)")
     col = {name: letter for letter, name in header.items()}
-    family = family_en = None
+    family = family_english = None
     genera = {}
     # Families and genera are on their own rows, each followed by its members
     for r in rows:
         if r.get(col["Family (Scientific)"]):
-            family, family_en = r[col["Family (Scientific)"]], r.get(col["Family (English)"], "")
+            family, family_english = r[col["Family (Scientific)"]], r.get(col["Family (English)"], "")
         elif r.get(col["Genus"]):
-            genera[r[col["Genus"]]] = (family, family_en)
+            genera[r[col["Genus"]]] = (family, family_english)
     with OUT.open("w", newline="", encoding="utf-8") as f:
         version = re.search(r"\((\d+\.\d+)\)", title)
         f.write(f"# Genus -> family from the IOC World Bird List{f' v{version[1]}' if version else ''}: "

@@ -3,7 +3,7 @@
 Run once whenever a new Alpha_codes_eng.pdf comes out (keep it in data/; it is not uploaded to GitHub):
     python scripts/make_alpha_codes.py data/Alpha_codes_eng.pdf
 
-Needs the `pdftotext` command (poppler; ships with Git for Windows).
+Require `pdftotext` command (poppler; ships with Git for Windows).
 """
 
 import csv
@@ -34,7 +34,7 @@ def main():
                 "# https://www.birdpop.org/pages/birdSpeciesCodes.php  Lines starting with # are notes.\n")
         w = csv.writer(f)
         w.writerow(["code", "english_name", "scientific_name"])
-        w.writerows([code, *names] for code, names in sorted(codes.items()))
+        w.writerows([code, english, scientific] for code, (english, scientific) in sorted(codes.items()))
     print(f"Wrote {len(codes)} codes to {OUT}")
 
 

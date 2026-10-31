@@ -8,9 +8,9 @@ for Calgary, AB.
 
 Standard library only. Usage:
 
-    python explore_birdmapper.py
-    python explore_birdmapper.py --query "bird collision" --out ./birdmapper_explore
-    python explore_birdmapper.py --bbox -114.32,50.84,-113.86,51.22
+    python scripts/explore_birdmapper.py
+    python scripts/explore_birdmapper.py --query "bird collision" --out ./birdmapper_explore
+    python scripts/explore_birdmapper.py --bbox -114.32,50.84,-113.86,51.22
 
 Everything it fetches is saved as JSON under --out so you can inspect it.
 """
@@ -18,7 +18,6 @@ Everything it fetches is saved as JSON under --out so you can inspect it.
 import argparse
 import json
 import re
-import sys
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -33,7 +32,7 @@ SPECIES_HINTS = ("species", "common", "bird", "taxon", "name")
 STATUS_HINTS = ("status", "condition", "alive", "dead", "fate", "outcome")
 DATE_HINTS = ("date", "time", "created")
 
-OUT_DIR = Path("birdmapper_explore")
+OUT_DIR = Path("birdmapper_explore")  # set from --out in main()
 
 
 # --------------------------------------------------------------------------- #
@@ -150,14 +149,14 @@ def step_search_items(base, collection_ids, query):
     return candidates
 
 
-def step_hub_layer(base, cid, label):
+def step_hub_layer(base, cid):
     """Try the Hub 'geoservice' façade for a collection."""
     heading(f"3a. Hub FeatureServer façade for collection {cid!r}")
     fs = f"{base}{SEARCH}/rest/services/collections/{cid}/geoservice/FeatureServer"
-    info = get_json(fs, {"f": "json"}, label=f"04_hub_featureserver_{label}")
+    info = get_json(fs, {"f": "json"}, label=f"04_hub_featureserver_{cid}")
     if info:
         print(f"   layers: {[(l.get('id'), l.get('name')) for l in info.get('layers', [])]}")
-    layer = get_json(f"{fs}/0", {"f": "json"}, label=f"05_hub_layer0_{label}")
+    layer = get_json(f"{fs}/0", {"f": "json"}, label=f"05_hub_layer0_{cid}")
     if layer and layer.get("fields"):
         return fs + "/0", layer["fields"]
     print("   (no fields returned; this façade probably describes catalog items, not collisions)")
@@ -168,27 +167,26 @@ def describe_fields(fields):
     print(f"   {len(fields)} fields:")
     for f in fields:
         print(f"     - {f['name']:<30} {f.get('type', ''):<22} alias={f.get('alias')!r}")
-    sp = guess_field(fields, SPECIES_HINTS)
-    st = guess_field(fields, STATUS_HINTS)
-    dt = guess_field(fields, DATE_HINTS)
-    print(f"\n   likely species fields: {sp or 'none found'}")
-    print(f"   likely status fields : {st or 'none found'}")
-    print(f"   likely date fields   : {dt or 'none found'}")
-    return sp, st, dt
+    species_fields = guess_field(fields, SPECIES_HINTS)
+    status_fields = guess_field(fields, STATUS_HINTS)
+    date_fields = guess_field(fields, DATE_HINTS)
+    print(f"\n   likely species fields: {species_fields or 'none found'}")
+    print(f"   likely status fields : {status_fields or 'none found'}")
+    print(f"   likely date fields   : {date_fields or 'none found'}")
+    return species_fields, status_fields, date_fields
 
 
 def step_query_layer(layer_url, fields, bbox, label):
     heading(f"4. Sampling records from {layer_url}")
-    sp, st, _ = describe_fields(fields)
+    species_fields, status_fields, _ = describe_fields(fields)
 
-    xmin, ymin, xmax, ymax = bbox.split(",")
     base_params = {
         "f": "json",
         "where": "1=1",
         "outFields": "*",
         "returnGeometry": "true",
         "resultRecordCount": 5,
-        "geometry": f"{xmin},{ymin},{xmax},{ymax}",
+        "geometry": bbox,
         "geometryType": "esriGeometryEnvelope",
         "inSR": 4326,
         "outSR": 4326,
@@ -214,7 +212,7 @@ def step_query_layer(layer_url, fields, bbox, label):
             print("   ", json.dumps(ft.get("attributes", {}), default=str)[:300])
 
     # distinct values for the status / species fields (what the dashboard filters need)
-    for kind, names in (("status", st), ("species", sp)):
+    for kind, names in (("status", status_fields), ("species", species_fields)):
         for name in names[:2]:
             print(f"\n   -- distinct {kind} values in field {name!r} (Calgary, with counts)")
             stats = get_json(
@@ -243,7 +241,7 @@ def step_direct_services(candidates, bbox):
     """Try any ArcGIS FeatureServer URLs discovered in item metadata."""
     heading("3b. Direct ArcGIS service URLs found in item metadata")
     tried = set()
-    for cid, iid, title, itype, urls in candidates:
+    for _, iid, title, _, urls in candidates:
         for u in urls:
             m = re.match(r"(.*?/FeatureServer)(/\d+)?/?$", u, re.I)
             if not m:
@@ -269,7 +267,7 @@ def main():
     ap.add_argument("--base", default=BASE, help="site root (default %(default)s)")
     ap.add_argument("--query", default="collision", help="catalog search text (default %(default)s)")
     ap.add_argument("--bbox", default=CALGARY_BBOX, help="west,south,east,north in lon/lat")
-    ap.add_argument("--out", default="birdmapper_explore", help="folder for raw JSON dumps")
+    ap.add_argument("--out", default=str(OUT_DIR), help="folder for raw JSON dumps")
     args = ap.parse_args()
     OUT_DIR = Path(args.out)
 
@@ -278,7 +276,7 @@ def main():
 
     # Try the Hub façade on each collection; only query if it exposes real fields
     for cid in cols:
-        layer_url, fields = step_hub_layer(args.base, cid, cid)
+        layer_url, fields = step_hub_layer(args.base, cid)
         if fields:
             step_query_layer(layer_url, fields, args.bbox, f"hub_{cid}")
 
@@ -291,4 +289,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

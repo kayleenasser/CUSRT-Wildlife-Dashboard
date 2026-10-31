@@ -1,0 +1,1032 @@
+/* Matches calgaryurbanspecies.ca: deep teal blocks, off-white page, Poppins, pill buttons. Light only, like the site. */
+:root {
+  color-scheme: light;
+  --teal: #035772;
+  --teal-dark: #034459;
+  --lime: #e0fd2c;
+  --surface: #f6f9f5;
+  --card: #ffffff;
+  --rule: #dfe2dd;
+  --grid: #ebeeea;
+  --ink: #091405;
+  --ink-2: #4a4c4a;
+  --ink-3: #7a7c79;
+  /* Category colours: the only place to change them (used by every chart) */
+  --deceased-bird: #b81111;
+  --live-bird: #49bde1;
+  --deceased-bat: #650f0f;
+  --live-bat: #b1714e;
+  /* Species chart bars: records before the mid-year split (SPLIT_DAY), and from it to the end of the year */
+  --before-split: var(--teal-dark);
+  --after-split: #3d8aa6;
+  /* Identified vs. not identified donut on the species chart */
+  --id-known: var(--teal);
+  --id-unknown: #cdd3cc;
+  /* Who-reported bar colours */
+  --src-cusrt: var(--teal);
+  --src-public: #7daab9;
+  --src-wildlife: #63b2c4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font: 300 15px/1.6 Poppins, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: inherit;
+}
+
+.wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-inline: 20px;
+}
+
+h1,
+h2 {
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: clamp(1.7rem, 4.5vw, 2.8rem);
+  line-height: 1.15;
+}
+
+h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--teal);
+}
+
+.topbar {
+  background: #fff;
+  border-bottom: 1px solid var(--rule);
+}
+
+.topbar .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  justify-content: space-between;
+  align-items: center;
+  padding-block: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--teal);
+  text-decoration: none;
+}
+
+.brand img {
+  width: 56px;
+  height: 56px;
+  flex: none;
+}
+
+.back {
+  font-size: .85rem;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--teal);
+  text-decoration: underline;
+}
+
+.hero {
+  background: var(--teal);
+  color: #fff;
+}
+
+.hero .wrap {
+  padding-block: 34px 28px;
+}
+
+.intro {
+  margin-top: 12px;
+  color: #d5e2e6;
+  font-size: .88rem;
+}
+
+.intro p {
+  margin: 0 0 8px;
+}
+
+.intro p:last-child {
+  margin-bottom: 0;
+}
+
+/* Summary line, then the year filter under it, both lined up with the description */
+.summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 22px;
+  /* no side padding, so the summary lines up with the description above */
+  padding: 14px 0;
+  color: #fff;
+}
+
+.headline {
+  font-size: 1.05rem;
+  margin: 0;
+  color: #e6eef0;
+}
+
+.headline strong {
+  color: var(--lime);
+  font-weight: 600;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.filters label {
+  font-weight: 500;
+  font-size: .9rem;
+}
+
+select {
+  font: 500 .9rem Poppins, "Segoe UI", sans-serif;
+  color: var(--teal);
+  background: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 18px;
+  min-height: 40px;
+  cursor: pointer;
+}
+
+select:focus-visible {
+  outline: 3px solid var(--lime);
+  outline-offset: 2px;
+}
+
+main.wrap {
+  padding-block: 28px 56px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 760px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 20px 20px 16px;
+  min-width: 0;
+}
+
+.card.wide {
+  grid-column: 1 / -1;
+}
+
+/* The chart area takes whatever height the card has left; renderMonths sizes the chart to it */
+.card.fill {
+  display: flex;
+  flex-direction: column;
+}
+
+.card.fill #months {
+  flex: 1 1 auto;
+  min-height: 200px;
+}
+
+#months svg {
+  display: block;
+}
+
+/* Survey area: full-width text, then small map previews with the screenshot note beside them */
+.survey p {
+  margin: 0 0 6px;
+  font-size: .88rem;
+  color: var(--ink-2);
+}
+
+.survey strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Data caveat callout: light teal panel with a teal edge, so it stands out from the body text */
+.caveat {
+  margin: 10px 0 0;
+  padding: 8px 14px;
+  background: #eaf2f4;
+  border-left: 4px solid var(--teal);
+  border-radius: 0 6px 6px 0;
+}
+
+.caveat p {
+  color: var(--ink);
+  margin: 0;
+}
+
+/* Screenshots, then the Explore the map panel as a third column at the same height */
+.maps-row {
+  display: grid;
+  grid-template-columns: minmax(0, 680px) minmax(220px, 1fr);
+  gap: 16px 24px;
+  margin-top: 14px;
+}
+
+@media (max-width: 760px) {
+  .maps-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.maps-row .footnote {
+  margin: 10px 0 0;
+}
+
+.explore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 0;
+}
+
+/* Logo on top, heading under it */
+.explore-head {
+  display: flex;
+  flex-direction: column;
+  align-items: inherit;
+  gap: 8px;
+}
+
+.explore-head .cta-logo {
+  height: 64px;
+  max-width: 100%;
+}
+
+.explore p {
+  margin: 0;
+}
+
+.explore .cta-btn {
+  margin-top: 6px;
+  padding: 14px 34px;
+  font-size: 1.05rem;
+}
+
+.maps {
+  display: grid;
+  /* Columns in proportion to each screenshot's aspect ratio, so both show uncropped at the same height */
+  grid-template-columns: minmax(0, 0.844fr) minmax(0, 1.484fr);
+  gap: 12px;
+  width: min(100%, 680px);
+}
+
+.maps figure {
+  margin: 0;
+}
+
+.maps a {
+  display: block;
+  position: relative;
+  cursor: zoom-in;
+}
+
+/* "Click to zoom" label over a screenshot on hover or keyboard focus */
+.maps a::after {
+  content: "Click to zoom";
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(3, 68, 89, .85);
+  color: #fff;
+  font-size: .75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .15s;
+  pointer-events: none;
+}
+
+.maps a:hover::after,
+.maps a:focus-visible::after {
+  opacity: 1;
+}
+
+.maps img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.maps figcaption {
+  margin-top: 4px;
+  font-size: .7rem;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+.card header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.sub {
+  color: var(--ink-3);
+  font-size: .82rem;
+  margin: 2px 0 0;
+}
+
+.footnote {
+  color: var(--ink-3);
+  font-size: .78rem;
+  margin: 14px 0 0;
+  padding-left: 10px;
+  border-left: 3px solid var(--teal-dark);
+}
+
+.donut-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+}
+
+#donut {
+  width: 170px;
+  max-width: 100%;
+}
+
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: .88rem;
+  font-weight: 400;
+}
+
+.legend li {
+  display: grid;
+  grid-template-columns: 12px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.legend .n {
+  text-align: right;
+  color: var(--ink);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.legend .pct {
+  text-align: right;
+  color: var(--ink-3);
+  min-width: 3.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.key {
+  display: flex;
+  gap: 14px;
+  font-size: .82rem;
+  color: var(--ink-2);
+  font-weight: 400;
+}
+
+.key span,
+.legend li {
+  white-space: nowrap;
+}
+
+.sw {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  vertical-align: -1px;
+  margin-right: 6px;
+}
+
+.legend .sw {
+  margin: 0;
+}
+
+.src-bar {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--grid);
+  margin: 4px 0 14px;
+}
+
+.src-bar span {
+  height: 100%;
+}
+
+.src-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 48px;
+}
+
+.src-tile .n {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.src-tile .n small {
+  font-size: .85rem;
+  font-weight: 400;
+  color: var(--ink-3);
+  margin-left: 6px;
+}
+
+.src-tile .lbl {
+  font-size: .85rem;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+.cta-row {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 20px;
+}
+
+.cta {
+  background: var(--teal);
+  color: #fff;
+  border-radius: 8px;
+  padding: 26px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.cta.alt {
+  background: var(--card);
+  color: var(--ink);
+  border: 2px solid var(--teal);
+}
+
+.cta.alt h2 {
+  color: var(--teal);
+}
+
+.cta.alt p {
+  color: var(--ink-2);
+}
+
+/* Teal buttons on light backgrounds */
+.cta.alt .cta-btn,
+.explore .cta-btn {
+  background: var(--teal);
+  color: #fff;
+}
+
+.cta.alt .cta-btn:hover,
+.explore .cta-btn:hover {
+  background: var(--teal-dark);
+}
+
+.cta.alt .cta-btn:focus-visible,
+.explore .cta-btn:focus-visible {
+  outline-color: var(--teal);
+}
+
+.cta-logo-link {
+  flex: none;
+  line-height: 0;
+}
+
+.cta-logo {
+  flex: none;
+  width: auto;
+  height: 56px;
+}
+
+.cta h2 {
+  color: #fff;
+  font-size: 1.3rem;
+}
+
+.cta p {
+  margin: 6px 0 0;
+  color: #e6eef0;
+  max-width: 40em;
+}
+
+.cta-btn {
+  flex: none;
+  background: var(--lime);
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 12px 26px;
+  white-space: nowrap;
+}
+
+.cta-btn:hover {
+  background: #fff;
+}
+
+.cta-btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.id-share {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: .82rem;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+.id-share svg {
+  flex: none;
+}
+
+.id-share ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.id-share b {
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Animal filter, species / genus / family tabs and sort, each centred in a third; stacked on narrow screens */
+.chart-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-items: center;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+}
+
+/* Animal filter at the left, species / genus / family in the middle, sort at the right */
+.chart-controls [role="radiogroup"] {
+  justify-self: start;
+}
+
+.chart-controls .sort {
+  justify-self: end;
+}
+
+@media (max-width: 760px) {
+  .chart-controls {
+    grid-template-columns: minmax(0, 1fr);
+    /* room between the stacked controls so a tap doesn't land on the wrong row */
+    row-gap: 16px;
+  }
+
+  .chart-controls .tabs,
+  .chart-controls .sort {
+    justify-self: start;
+  }
+}
+
+.chart-controls .tabs {
+  margin-bottom: 0;
+}
+
+.sort {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: .82rem;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+.sort select {
+  font-size: .82rem;
+  background: var(--grid);
+  min-height: 36px;
+  padding: 6px 14px;
+}
+
+.sort select:focus-visible {
+  outline-color: var(--teal);
+}
+
+.tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 12px;
+  background: var(--grid);
+  border-radius: 999px;
+}
+
+.tabs button {
+  font: 500 .82rem Poppins, "Segoe UI", sans-serif;
+  color: var(--ink-2);
+  background: none;
+  cursor: pointer;
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 16px;
+}
+
+.tabs button:hover {
+  color: var(--teal);
+}
+
+.tabs button[aria-selected="true"],
+.tabs button[aria-checked="true"] {
+  background: var(--teal);
+  color: #fff;
+}
+
+.tabs button:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.species-scroll {
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.more {
+  margin-top: 10px;
+  font: 500 .82rem Poppins, "Segoe UI", sans-serif;
+  background: none;
+  cursor: pointer;
+  border: 2px solid var(--teal);
+  color: var(--teal);
+  border-radius: 999px;
+  padding: 6px 16px;
+}
+
+.more:hover {
+  background: var(--teal);
+  color: #fff;
+}
+
+svg text {
+  fill: var(--ink-2);
+  font-family: Poppins, "Segoe UI", sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+svg .val {
+  fill: var(--ink);
+  font-weight: 500;
+}
+
+svg .centre-n {
+  fill: var(--ink);
+  font-size: 34px;
+  font-weight: 700;
+}
+
+svg .grid line {
+  stroke: var(--grid);
+}
+
+svg .axis path,
+svg .axis line {
+  stroke: var(--rule);
+}
+
+svg .mark {
+  transition: opacity .12s;
+}
+
+svg .dim .mark:not(.on) {
+  opacity: .35;
+}
+
+details {
+  margin-top: 10px;
+  font-size: .82rem;
+  color: var(--ink-2);
+}
+
+summary {
+  cursor: pointer;
+  color: var(--teal);
+  font-weight: 400;
+}
+
+.tbl-wrap {
+  overflow-x: auto;
+  max-height: 280px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 4px 10px 4px 0;
+  border-bottom: 1px solid var(--grid);
+}
+
+th {
+  font-weight: 500;
+}
+
+td.num,
+th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#tip {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10;
+  background: var(--teal-dark);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: .82rem;
+  line-height: 1.45;
+  max-width: 240px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .18);
+}
+
+#tip b {
+  font-weight: 600;
+}
+
+/* ---- pop-ups (reports list and enlarged map): teal header with the title and a close button ---- */
+dialog {
+  border: 0;
+  border-radius: 10px;
+  padding: 0;
+  color: var(--ink);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .25);
+}
+
+dialog header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  background: var(--teal);
+  color: #fff;
+}
+
+dialog h2 {
+  color: #fff;
+}
+
+dialog .sub {
+  color: #d5e2e6;
+}
+
+dialog .close {
+  flex: none;
+  font: 600 1.4rem/1 Poppins, sans-serif;
+  color: #fff;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+dialog .close:focus-visible {
+  outline: 2px solid var(--lime);
+}
+
+/* Reports behind a chart part */
+#reports {
+  width: min(720px, calc(100% - 32px));
+  max-height: 80vh;
+}
+
+#reports::backdrop {
+  background: rgba(3, 68, 89, .45);
+}
+
+#reports header {
+  padding: 18px 20px;
+}
+
+/* Species name with its "Learn about this bird / bat" link beside it */
+#reports .title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+}
+
+#reports .learn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--lime);
+  font-size: .82rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+/* only species pop-ups have a page to link to */
+#reports .learn[hidden] {
+  display: none;
+}
+
+#reports .learn svg {
+  align-self: center;
+}
+
+#reports .learn:hover {
+  text-decoration: underline;
+}
+
+#reports .learn:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+#reports .body {
+  padding: 6px 20px 18px;
+  overflow-y: auto;
+  max-height: calc(80vh - 90px);
+  font-size: .88rem;
+}
+
+/* The pop-up body scrolls, so its table doesn't need its own scroll height */
+#reports .tbl-wrap {
+  max-height: none;
+}
+
+/* Species names in pop-ups that list several species link to the same pages */
+#reports td a.species-link {
+  color: var(--teal);
+  text-underline-offset: 2px;
+}
+
+#reports .note {
+  color: var(--ink-3);
+  font-size: .78rem;
+  margin: 10px 0 0;
+}
+
+/* Clickable column headings in the report pop-up; the sorted one has an arrow */
+#reports .sort-col {
+  font: inherit;
+  font-weight: 500;
+  color: var(--teal);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#reports .sort-col:hover {
+  text-decoration: underline;
+}
+
+#reports .sort-col:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Enlarged map screenshot, sized to the image */
+#map-view {
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  max-height: 94vh;
+  overflow: auto;
+}
+
+#map-view::backdrop {
+  background: rgba(3, 68, 89, .65);
+}
+
+/* width 0 + min-width 100%: the header wraps to the image's width instead of widening the pop-up */
+#map-view header {
+  width: 0;
+  min-width: 100%;
+  padding: 14px 16px 14px 20px;
+}
+
+/* Double-click or pinch to zoom, drag to move: the image moves inside this frame with a CSS transform */
+#map-view .viewport {
+  overflow: hidden;
+  touch-action: none;
+  cursor: zoom-in;
+}
+
+#map-view .viewport.zoomed {
+  cursor: grab;
+}
+
+#map-view .viewport.dragging {
+  cursor: grabbing;
+}
+
+#map-view img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: calc(100vw - 32px);
+  max-height: calc(94vh - 120px);
+  transform-origin: 0 0;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.legend li.clickable:hover span:first-of-type,
+.src-tile.clickable:hover .lbl {
+  text-decoration: underline;
+}
+
+.clickable:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.error {
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+footer {
+  background: var(--teal-dark);
+  color: #d5e2e6;
+  font-size: .82rem;
+}
+
+footer .wrap {
+  padding-block: 22px;
+}
