@@ -67,45 +67,24 @@ h2 {
   color: var(--teal);
 }
 
-.topbar {
-  background: #fff;
-  border-bottom: 1px solid var(--rule);
-}
-
-.topbar .wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  justify-content: space-between;
-  align-items: center;
-  padding-block: 12px;
-}
-
-.brand {
+/* Page title with the CUSRT logo before it; the logo shrinks with the heading on small screens */
+.title {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: var(--teal);
-  text-decoration: none;
+  gap: 16px;
 }
 
-.brand img {
-  width: 56px;
-  height: 56px;
+.title img {
+  width: clamp(48px, 7vw, 64px);
+  height: auto;
   flex: none;
-}
-
-.back {
-  font-size: .85rem;
-  color: var(--ink-2);
-  text-decoration: none;
-}
-
-.back:hover {
-  color: var(--teal);
-  text-decoration: underline;
+  /* White ring around the logo; content-box so the padding adds to its size instead of shrinking it */
+  box-sizing: content-box;
+  padding: 3px;
+  background: #fff;
+  border-radius: 50%;
+  /* Poppins sits a little high in its line box; lift the logo to match the letters' optical centre */
+  transform: translateY(-.055em);
 }
 
 .hero {
