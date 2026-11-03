@@ -14976,6 +14976,17 @@
 "date": "2026-09-19",
 "animal": "Bird",
 "status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": null,
+"family_common": null,
+"source": "CUSRT",
+"report": 1184431
+},
+{
+"date": "2026-09-19",
+"animal": "Bird",
+"status": "Deceased",
 "species": "White-crowned Sparrow",
 "genus": "Zonotrichia",
 "family": "Passerellidae",
