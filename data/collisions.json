@@ -14589,6 +14589,17 @@
 },
 {
 "date": "2026-08-25",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Ovenbird",
+"genus": "Seiurus",
+"family": "Parulidae",
+"family_common": "New World Warblers",
+"source": "CUSRT",
+"report": 1176736
+},
+{
+"date": "2026-08-25",
 "animal": "Bat",
 "status": "Alive",
 "species": "Silver-haired Bat",
@@ -14597,17 +14608,6 @@
 "family_common": "Vesper Bats",
 "source": "CUSRT",
 "report": 1176735
-},
-{
-"date": "2026-08-25",
-"animal": "Bird",
-"status": "Deceased",
-"species": "Unknown",
-"genus": null,
-"family": null,
-"family_common": null,
-"source": "CUSRT",
-"report": 1176736
 },
 {
 "date": "2026-08-26",
@@ -14736,8 +14736,8 @@
 "status": "Deceased",
 "species": "Unknown",
 "genus": null,
-"family": null,
-"family_common": null,
+"family": "Parulidae",
+"family_common": "New World Warblers",
 "source": "CUSRT",
 "report": 1178028
 },
@@ -14751,6 +14751,17 @@
 "family_common": "New World Sparrows",
 "source": "CUSRT",
 "report": 1178108
+},
+{
+"date": "2026-09-09",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": "Parulidae",
+"family_common": "New World Warblers",
+"source": "CUSRT",
+"report": 1184550
 },
 {
 "date": "2026-09-09",
