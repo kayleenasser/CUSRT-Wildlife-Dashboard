@@ -13928,6 +13928,28 @@
 "report": 1176038
 },
 {
+"date": "2026-06-15",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Rock Pigeon",
+"genus": "Columba",
+"family": "Columbidae",
+"family_common": "Pigeons, Doves",
+"source": "CUSRT",
+"report": 1184596
+},
+{
+"date": "2026-06-15",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184595
+},
+{
 "date": "2026-06-17",
 "animal": "Bird",
 "status": "Alive",
@@ -13994,6 +14016,28 @@
 "report": 1176162
 },
 {
+"date": "2026-07-16",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Chipping Sparrow",
+"genus": "Spizella",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184599
+},
+{
+"date": "2026-07-16",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Chipping Sparrow",
+"genus": "Spizella",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184599
+},
+{
 "date": "2026-07-17",
 "animal": "Bird",
 "status": "Alive",
@@ -14014,6 +14058,39 @@
 "family_common": "Nuthatches",
 "source": "Public",
 "report": 1176670
+},
+{
+"date": "2026-07-20",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": null,
+"family_common": null,
+"source": "CUSRT",
+"report": 1184598
+},
+{
+"date": "2026-07-20",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": null,
+"family_common": null,
+"source": "CUSRT",
+"report": 1184598
+},
+{
+"date": "2026-07-20",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": null,
+"family_common": null,
+"source": "CUSRT",
+"report": 1184598
 },
 {
 "date": "2026-07-26",
@@ -14058,6 +14135,17 @@
 "family_common": "New World Sparrows",
 "source": "CUSRT",
 "report": 1176421
+},
+{
+"date": "2026-07-31",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Red-breasted Nuthatch",
+"genus": "Sitta",
+"family": "Sittidae",
+"family_common": "Nuthatches",
+"source": "CUSRT",
+"report": 1184600
 },
 {
 "date": "2026-08-01",
