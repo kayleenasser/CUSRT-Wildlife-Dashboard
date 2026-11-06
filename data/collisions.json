@@ -14016,6 +14016,17 @@
 "report": 1176162
 },
 {
+"date": "2026-07-15",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Chipping Sparrow",
+"genus": "Spizella",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184607
+},
+{
 "date": "2026-07-16",
 "animal": "Bird",
 "status": "Deceased",
@@ -14091,6 +14102,127 @@
 "family_common": null,
 "source": "CUSRT",
 "report": 1184598
+},
+{
+"date": "2026-07-24",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Chipping Sparrow",
+"genus": "Spizella",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184602
+},
+{
+"date": "2026-07-24",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Chipping Sparrow",
+"genus": "Spizella",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184602
+},
+{
+"date": "2026-07-24",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Chipping Sparrow",
+"genus": "Spizella",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184602
+},
+{
+"date": "2026-07-24",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Chipping Sparrow",
+"genus": "Spizella",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184602
+},
+{
+"date": "2026-07-24",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Chipping Sparrow",
+"genus": "Spizella",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184602
+},
+{
+"date": "2026-07-24",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Chipping Sparrow",
+"genus": "Spizella",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184603
+},
+{
+"date": "2026-07-24",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Chipping Sparrow",
+"genus": "Spizella",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184603
+},
+{
+"date": "2026-07-24",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Chipping Sparrow",
+"genus": "Spizella",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184603
+},
+{
+"date": "2026-07-24",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Chipping Sparrow",
+"genus": "Spizella",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184604
+},
+{
+"date": "2026-07-24",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Chipping Sparrow",
+"genus": "Spizella",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184605
+},
+{
+"date": "2026-07-24",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": null,
+"family_common": null,
+"source": "CUSRT",
+"report": 1184606
 },
 {
 "date": "2026-07-26",
@@ -15048,6 +15180,17 @@
 "family_common": "New World Warblers",
 "source": "Public",
 "report": 1180968
+},
+{
+"date": "2026-09-17",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": "Parulidae",
+"family_common": "New World Warblers",
+"source": "Public",
+"report": 1184609
 },
 {
 "date": "2026-09-17",
