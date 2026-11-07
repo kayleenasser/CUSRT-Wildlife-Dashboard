@@ -16082,5 +16082,16 @@
 "family_common": "Nuthatches",
 "source": "CUSRT",
 "report": 1183885
+},
+{
+"date": "2026-11-01",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Brown Creeper",
+"genus": "Certhia",
+"family": "Certhiidae",
+"family_common": "Treecreepers",
+"source": "CUSRT",
+"report": 1184650
 }
 ]
