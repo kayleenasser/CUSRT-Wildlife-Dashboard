@@ -15655,6 +15655,17 @@
 "report": 1181405
 },
 {
+"date": "2026-09-30",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184740
+},
+{
 "date": "2026-10-01",
 "animal": "Bird",
 "status": "Deceased",
