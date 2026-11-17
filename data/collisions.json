@@ -15094,6 +15094,61 @@
 "report": 1178428
 },
 {
+"date": "2026-09-12",
+"animal": "Bird",
+"status": "Alive",
+"species": "Black-billed Magpie",
+"genus": "Pica",
+"family": "Corvidae",
+"family_common": "Crows, Jays",
+"source": "CUSRT",
+"report": 1184749
+},
+{
+"date": "2026-09-12",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Red-breasted Nuthatch",
+"genus": "Sitta",
+"family": "Sittidae",
+"family_common": "Nuthatches",
+"source": "CUSRT",
+"report": 1184752
+},
+{
+"date": "2026-09-12",
+"animal": "Bird",
+"status": "Alive",
+"species": "Unknown",
+"genus": null,
+"family": "Parulidae",
+"family_common": "New World Warblers",
+"source": "CUSRT",
+"report": 1184750
+},
+{
+"date": "2026-09-12",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": null,
+"family_common": null,
+"source": "CUSRT",
+"report": 1184751
+},
+{
+"date": "2026-09-12",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": "Parulidae",
+"family_common": "New World Warblers",
+"source": "CUSRT",
+"report": 1184753
+},
+{
 "date": "2026-09-15",
 "animal": "Bird",
 "status": "Alive",
