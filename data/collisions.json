@@ -11750,6 +11750,28 @@
 "report": 1171557
 },
 {
+"date": "2026-04-01",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Dark-eyed Junco",
+"genus": "Junco",
+"family": "Passerellidae",
+"family_common": "New World Sparrows",
+"source": "CUSRT",
+"report": 1184777
+},
+{
+"date": "2026-04-01",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": null,
+"family_common": null,
+"source": "CUSRT",
+"report": 1184778
+},
+{
 "date": "2026-04-03",
 "animal": "Bird",
 "status": "Deceased",
@@ -12826,6 +12848,28 @@
 "family_common": "Nuthatches",
 "source": "CUSRT",
 "report": 1173568
+},
+{
+"date": "2026-05-08",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Red-breasted Nuthatch",
+"genus": "Sitta",
+"family": "Sittidae",
+"family_common": "Nuthatches",
+"source": "CUSRT",
+"report": 1184775
+},
+{
+"date": "2026-05-08",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Red-breasted Nuthatch",
+"genus": "Sitta",
+"family": "Sittidae",
+"family_common": "Nuthatches",
+"source": "CUSRT",
+"report": 1184776
 },
 {
 "date": "2026-05-10",
@@ -14872,6 +14916,17 @@
 "family_common": "Finches, Euphonias",
 "source": "CUSRT",
 "report": 1176869
+},
+{
+"date": "2026-08-29",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": null,
+"family_common": null,
+"source": "CUSRT",
+"report": 1184774
 },
 {
 "date": "2026-08-30",
