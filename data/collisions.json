@@ -11717,6 +11717,17 @@
 "report": 1171382
 },
 {
+"date": "2026-03-16",
+"animal": "Bird",
+"status": "Deceased",
+"species": "Unknown",
+"genus": null,
+"family": null,
+"family_common": null,
+"source": "CUSRT",
+"report": 1184782
+},
+{
 "date": "2026-03-17",
 "animal": "Bird",
 "status": "Deceased",
